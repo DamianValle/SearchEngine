@@ -7,6 +7,8 @@
 
 package ir;
 
+import java.util.*;
+
 /**
  *  Searches an index for results of a query.
  */
@@ -33,9 +35,13 @@ public class Searcher {
         //  REPLACE THE STATEMENT BELOW WITH YOUR CODE
         //
     	
+    	Iterator iter = query.queryterm.iterator();
+    	
+    	while(iter.hasNext()) {
+    		System.err.println(iter.next().getTerm());
+    	}
     	
     	//antes return null
-        //return getPostings( query );
-    	return null;
+    	return getPostings(token);
     }
 }

@@ -30,6 +30,10 @@ public class Query {
             term = t;
             weight = w;
         }
+        
+        public String getTerm() {
+        	return term;
+        }
     }
 
     /** 
