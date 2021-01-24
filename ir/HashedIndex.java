@@ -27,10 +27,12 @@ public class HashedIndex implements Index {
      */
     public void insert( String token, int docID, int offset ) { //el offset creo que es para el positional index??
     	
-    	//esto es mio:
-    	
-    	
-        
+    	PostingsList list = index.get(token);
+    	if(list == null) {
+    		list = new PostingsList();
+    	}
+    	list.add(docID, offset);
+    	index.put(token, list);
     }
 
 
@@ -39,11 +41,7 @@ public class HashedIndex implements Index {
      *  if the term is not in the index.
      */
     public PostingsList getPostings( String token ) {
-    	
-        //esto es mio:
-    	
-        //return index.get(token);
-    	return null;
+        return index.get(token);
     }
 
 

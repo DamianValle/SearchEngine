@@ -19,8 +19,9 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
     public double score = 0;
     
     //mio
+    public ArrayList<Integer> offsetList;
     
-
+    
     /**
      *  PostingsEntries are compared by their score (only relevant
      *  in ranked retrieval).
@@ -30,6 +31,11 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
      */
     public int compareTo( PostingsEntry other ) {
        return Double.compare( other.score, score );
+    }
+    
+    public PostingsEntry(int docID, ArrayList<Integer> offsetList) {
+    	this.docID = docID;
+    	this.offsetList = offsetList;
     }
 }
 

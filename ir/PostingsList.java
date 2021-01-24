@@ -24,6 +24,28 @@ public class PostingsList {
     public PostingsEntry get( int i ) {
     return list.get( i );
     }
+    
+    /** Adds a new entry or creates it if it does not yet exist. */
+    public void add( int docID, int offset ) {
+    	for( PostingsEntry entry : list ) {
+    		if( entry.docID == docID ) {
+    			// If we find a match then we just add the offset and leave.
+    			entry.offsetList.add(offset);
+    			return;
+    		}
+    	}
+    	
+    	// If there is no match then we create an empty offsetList, add the one offset we have, create a Postings entry and add docID and offsetList.
+    	ArrayList<Integer> offsetList = new ArrayList<Integer>();
+    	offsetList.add(offset);
+    	
+    	PostingsEntry entry = new PostingsEntry(docID, offsetList);
+    	list.add(entry);
+    }
+    
+    public void add( PostingsEntry p) {
+    	list.add(p);
+    }
 
     
 }
