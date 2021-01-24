@@ -35,6 +35,7 @@ public class Searcher {
     	
     	
     	//antes return null
-        return getPostings( query );
+        //return getPostings( query );
+    	return null;
     }
 }
