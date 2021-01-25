@@ -30,13 +30,24 @@ public class Query {
             term = t;
             weight = w;
         }
+        
     }
+    
 
     /** 
      *  Representation of the query as a list of terms with associated weights.
      *  In assignments 1 and 2, the weight of each term will always be 1.
      */
     public ArrayList<QueryTerm> queryterm = new ArrayList<QueryTerm>();
+    
+    
+    public ArrayList<String> getQueryTerms(){
+    	ArrayList<String> terms = new ArrayList<String>();
+    	for(QueryTerm query : queryterm) {
+    		terms.add(query.term);
+    	}
+    	return terms;
+    }
 
     /**  
      *  Relevance feedback constant alpha (= weight of original query terms). 

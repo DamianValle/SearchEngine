@@ -8,12 +8,17 @@
 package ir;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class PostingsList {
     
     /** The postings list */
     private ArrayList<PostingsEntry> list = new ArrayList<PostingsEntry>();
-
+    
+    /** The postings list iterator method. */
+    public Iterator<PostingsEntry> iterator(){
+        return list.iterator();
+    }
 
     /** Number of postings in this list. */
     public int size() {
@@ -43,10 +48,10 @@ public class PostingsList {
     	list.add(entry);
     }
     
+    /** Adds a new entry. */
     public void add( PostingsEntry p) {
     	list.add(p);
     }
-
     
 }
 
