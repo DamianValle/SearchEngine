@@ -1,2 +1,5 @@
+PRECISION = 7/22 = 0.318
+RECALL = 7/100 = 0.07
+
 Evelyn_Silvia.f does not explicitly contain valuable information about any mathematics graduate program but it points to the link http://www.math.ucdavis.edu/ which might be valuable.
 
