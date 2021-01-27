@@ -60,11 +60,21 @@ public class PersistentHashedIndex implements Index {
 
     /**
      *   A helper class representing one entry in the dictionary hashtable.
+     *   IS THIS ENTRY REFERRING A LONG POINTER OR THE FULL <WORD, POSTINGSLISTS>?
      */ 
     public class Entry {
         //
         //  YOUR CODE HERE
         //
+    	//to lo de aqui mio
+    	
+    	public String word;
+    	public ArrayList<PostingsList> postingsList;
+    	
+    	public Entry(String word, ArrayList<PostingsList> postingsList) {
+    		this.word = word;
+        	this.postingsList = postingsList;
+        }
     }
 
 
@@ -236,6 +246,13 @@ public class PersistentHashedIndex implements Index {
         //
         //  YOUR CODE HERE
         //
+    	//to esto copiao del HashedIndex
+    	PostingsList list = index.get(token);
+    	if(list == null) {
+    		list = new PostingsList();
+    	}
+    	list.add(docID, offset);
+    	index.put(token, list);
     }
 
 
