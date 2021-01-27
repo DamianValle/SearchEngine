@@ -45,7 +45,7 @@ public class Searcher {
     	ArrayList<PostingsList> postingsLists = new ArrayList<PostingsList>();
     	
     	for(String queryterm : queries) {
-    		System.err.println("Added " + queryterm + " to the query postings list.");
+    		//System.err.println("Added " + queryterm + " to the query postings list.");
     		postingsLists.add(index.getPostings(queryterm));
     	}
     	
@@ -61,24 +61,29 @@ public class Searcher {
     	
     	
     	if( queryType == QueryType.INTERSECTION_QUERY ) {
-    		System.err.println("Selected Intersection Query");
+    		//System.err.println("Selected Intersection Query");
     		
     		if(postingsLists.size() == 1) {
-    			System.err.println("query of size 1");
+    			//System.err.println("query of size 1");
     			//return index.getPostings(token);
     			return index.getPostings(queries.get(0));
     		} else if (postingsLists.size() > 1){
-    			System.err.println("Intersection Mode");
-    			System.err.println("Query of size: " + postingsLists.size());
+    			//System.err.println("Intersection Mode");
     			return postingsIntersection(postingsLists);
     		} else {
     			System.err.println("Wrong query size.");
     		}
         	
     	} else if ( queryType == QueryType.PHRASE_QUERY ) {
-    		System.err.println("Selected Phrase Query");
     		
-    		return postingsPhrase(postingsLists);
+    		if(postingsLists.size() == 1) {
+    			//System.err.println("Query of size 1");
+    			return index.getPostings(queries.get(0));
+    		} else if (postingsLists.size() > 1){
+    			//System.err.println("Selected Phrase Query");
+        		return postingsPhrase(postingsLists);
+    		}
+    		
     		
     	} else if ( queryType == QueryType.RANKED_QUERY ) {
     		System.err.println("Selected Ranked Query");
@@ -114,6 +119,10 @@ public class Searcher {
     		
     		p2 = iter.next();
     		
+    		//p1.add(null);
+    		//p2.add(null);
+    		
+    		/**
     		System.err.println("p1 posting list: ");
     		for( int i = 0; i < p1.size(); i++ ) {
         		System.err.println(p1.get(i).docID);
@@ -123,50 +132,62 @@ public class Searcher {
     		for( int i = 0; i < p2.size(); i++ ) {
         		System.err.println(p2.get(i).docID);
         	}
+        	*/
     		
     		pe1_idx = 0;
     		pe2_idx = 0;
     		
-    		//postingsEntryIterator1 = p1.iterator();
-    		//postingsEntryIterator2 = p2.iterator();
-    		//postingsEntry1 = postingsEntryIterator1.next();
-			//postingsEntry2 = postingsEntryIterator2.next();
-    		
     		postingsEntry1 = p1.get(pe1_idx++);
     		postingsEntry2 = p2.get(pe2_idx++);
     		
-    		System.err.println("PostingsEntry1: " + postingsEntry1 + "PostingsEntry2: " + postingsEntry2);
-			
 			if( postingsEntry1.docID == postingsEntry2.docID ) {
-				System.err.println("Match in the first one!");
+				//System.err.println("Match in the first one!");
 				answer.add(postingsEntry1);
-				//postingsEntry1 = postingsEntryIterator1.next();
-				//postingsEntry2 = postingsEntryIterator2.next();
 				postingsEntry1 = p1.get(pe1_idx++);
 				postingsEntry2 = p2.get(pe2_idx++);
 			}
     		
-    		//while(postingsEntryIterator1.hasNext() && postingsEntryIterator2.hasNext()) {
-			while( pe1_idx < p1.size() && pe2_idx < p2.size() ) {
-    			
-    			System.err.println("p1 docID: " + postingsEntry1.docID + " ||| p2 docID: " + postingsEntry2.docID);
+			while( postingsEntry1 != null && postingsEntry2 != null ) {
+				
+    			//System.err.println("p1 docID: " + postingsEntry1.docID + " ||| p2 docID: " + postingsEntry2.docID);
     			
     			if( postingsEntry1.docID == postingsEntry2.docID ) {
-    				System.err.println("Found match!");
-    				answer.add(postingsEntry1); // Need to add new add() method.
+    				//System.err.println("Found match!");
+    				answer.add(postingsEntry1);
     				
-    				postingsEntry1 = p1.get(pe1_idx++);
-    				postingsEntry2 = p2.get(pe2_idx++);
+    				if(pe1_idx >= p1.size()) {
+    					postingsEntry1 = null;
+    				} else {
+    					postingsEntry1 = p1.get(pe1_idx++);
+    				}
+    				
+    				if(pe2_idx >= p2.size()) {
+    					postingsEntry2 = null;
+    				} else {
+    					postingsEntry2 = p2.get(pe2_idx++);
+    				}
+    				
+    				
     			} else if ( postingsEntry1.docID < postingsEntry2.docID ) {
-    				postingsEntry1 = p1.get(pe1_idx++);
+    				if(pe1_idx >= p1.size()) {
+    					postingsEntry1 = null;
+    				} else {
+    					postingsEntry1 = p1.get(pe1_idx++);
+    				}
     			} else {
-    				postingsEntry2 = p2.get(pe2_idx++);
+    				if(pe2_idx >= p2.size()) {
+    					postingsEntry2 = null;
+    				} else {
+    					postingsEntry2 = p2.get(pe2_idx++);
+    				}
     			}
     		}
+			
+			
     		
     		if( answer.size() > 0 && iter.hasNext() ) {
-    			System.out.println("Iteramos nueva palabra.");
-    			System.out.println("answer size: " + answer.size());
+    			//System.out.println("Iteramos nueva palabra.");
+    			//System.out.println("answer size: " + answer.size());
     			p1 = answer;
     		}
     		
@@ -204,10 +225,8 @@ public class Searcher {
     		postingsEntry1 = p1.get(pe1_idx++);
     		postingsEntry2 = p2.get(pe2_idx++);
     		
-    		System.err.println("PostingsEntry1: " + postingsEntry1 + "PostingsEntry2: " + postingsEntry2);
-			
 			if( postingsEntry1.docID == postingsEntry2.docID ) {
-				System.err.println("Match in the first one!");
+				//System.err.println("Match in the first one!");
 				
 				finished = false;
 				for( int offset1 : postingsEntry1.offsetList ) {
@@ -228,10 +247,10 @@ public class Searcher {
     		
 			while( pe1_idx < p1.size() && pe2_idx < p2.size() ) {
     			
-    			System.err.println("p1 docID: " + postingsEntry1.docID + " ||| p2 docID: " + postingsEntry2.docID);
+    			//System.err.println("p1 docID: " + postingsEntry1.docID + " ||| p2 docID: " + postingsEntry2.docID);
     			
     			if( postingsEntry1.docID == postingsEntry2.docID ) {
-    				System.err.println("Found match!");
+    				//System.err.println("Found match!");
     				
     				finished = false;
     				for( int offset1 : postingsEntry1.offsetList ) {
@@ -257,9 +276,9 @@ public class Searcher {
     		}
     		
     		if( answer.size() > 0 && iter.hasNext() ) {
-    			System.out.println("Answer size: " + answer.size());
+    			//System.out.println("Answer size: " + answer.size());
     			p1 = answer;
-    			System.err.println("Onto the next word in the query.");
+    			//System.err.println("Onto the next word in the query.");
         		current_offset++;
     		}
     		
