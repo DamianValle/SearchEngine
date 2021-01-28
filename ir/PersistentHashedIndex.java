@@ -75,6 +75,30 @@ public class PersistentHashedIndex implements Index {
     		this.word = word;
         	this.postingsList = postingsList;
         }
+    	
+    	public Entry(String word) {
+    		this word = word;
+    		
+    	}
+    	
+    	/**
+    	 * 	Computes hash in the range [0, 2100000] for a given word.
+    	 */
+    	public long getKey() {
+    		long hashCode = 0;
+    		for(int i = 0; i < this.word.length(); i++) {
+    			hashCode = (31 * hashCode + this.word.charAt(i))%TABLESIZE;
+    		}
+    		
+    		return hashCode;
+    	}
+    	
+    	/**
+    	 * 	Gets the String serialization of an entry.
+    	 */
+    	public String getValue() {
+    		return word + " " + this.postingsList.getValue();
+    	}
     }
 
 
@@ -108,7 +132,7 @@ public class PersistentHashedIndex implements Index {
      */ 
     int writeData( String dataString, long ptr ) {
         try {
-            dataFile.seek( ptr ); 
+            dataFile.seek( ptr );
             byte[] data = dataString.getBytes();
             dataFile.write( data );
             return data.length;
@@ -133,6 +157,23 @@ public class PersistentHashedIndex implements Index {
             return null;
         }
     }
+    
+    /**
+     *  Reads data from the dictionary file
+     */ 
+    long readDictionary( long ptr ) {
+        try {
+            dataFile.seek( ptr );
+            byte[] data = new byte[8];
+            dataFile.readFully( data );
+            return new Long(data);
+        } catch ( IOException e ) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    
+    
 
 
     // ==================================================================
@@ -149,6 +190,10 @@ public class PersistentHashedIndex implements Index {
         //
         //  YOUR CODE HERE
         //
+    	//	mio
+    	
+    	writeData(serialize(entry), ptr);
+    	
     }
 
     /**
@@ -160,6 +205,12 @@ public class PersistentHashedIndex implements Index {
         //
         //  REPLACE THE STATEMENT BELOW WITH YOUR CODE 
         //
+    	
+    	int entry_size = String.toInt(readData(ptr, 4));
+    	
+    	
+    	
+    	
         return null;
     }
 
@@ -217,6 +268,9 @@ public class PersistentHashedIndex implements Index {
             // 
             //  YOUR CODE HERE
             //
+            
+            //	for all 
+            
         } catch ( IOException e ) {
             e.printStackTrace();
         }
@@ -227,6 +281,17 @@ public class PersistentHashedIndex implements Index {
     // ==================================================================
 
 
+    public long getHash(String s) {
+		long hashCode = 0;
+		for(int i = 0; i < s.length(); i++) {
+			hashCode = (31 * hashCode + scharAt(i))%TABLESIZE;
+		}
+		
+		return hashCode;
+	}
+    
+    
+    
     /**
      *  Returns the postings for a specific term, or null
      *  if the term is not in the index.
@@ -235,7 +300,21 @@ public class PersistentHashedIndex implements Index {
         //
         //  REPLACE THE STATEMENT BELOW WITH YOUR CODE
         //
-        return null;
+    	
+    	//	hacer hash de la palabra
+    	long hash = getHash(token);
+    	
+    	
+    	//	mirar la entry del dictionary file
+    	long ptr = readDictionary(hash);
+    	
+    	
+    	Entry e = readEntry(ptr);
+    	
+    	
+    	//	con el ptr de la entry coger la info del datafile i parsearla a un PostingsList
+    	
+    	
     }
 
 

@@ -37,5 +37,6 @@ public class PostingsEntry implements Comparable<PostingsEntry>, Serializable {
     	this.docID = docID;
     	this.offsetList = offsetList;
     }
+    
 }
 

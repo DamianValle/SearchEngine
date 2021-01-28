@@ -53,5 +53,18 @@ public class PostingsList {
     	list.add(p);
     }
     
+    public String getValue() {
+    	
+    	Iterator<PostingsEntry> iter = list.iterator();
+    	
+    	String value = iter.next.getValue();
+    	
+    	while(iter.hasNext()) {
+    		value = value + ":" + iter.next().getValue();
+    	}
+    	
+    	return value;
+    }
+    
 }
 
