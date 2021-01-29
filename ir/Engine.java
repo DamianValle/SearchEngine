@@ -16,8 +16,8 @@ import java.io.File;
 public class Engine {
 
     /** The inverted index. */
-    //Index index = new HashedIndex();
-    Index index = new PersistentHashedIndex();
+    Index index = new HashedIndex();
+    //Index index = new PersistentHashedIndex();
 
     /** The indexer creating the search index. */
     Indexer indexer;
@@ -79,11 +79,8 @@ public class Engine {
                 for ( int i=0; i<dirNames.size(); i++ ) {
                     File dokDir = new File( dirNames.get( i ));
                     
-                    System.err.println("Antes del processFiles.");
-                    
                     indexer.processFiles( dokDir, is_indexing );
                     
-                    System.err.println("Depuis del processFiles.");
                 }
                 long elapsedTime = System.currentTimeMillis() - startTime;
                 gui.displayInfoText( String.format( "Indexing done in %.1f seconds.", elapsedTime/1000.0 ));

@@ -32,12 +32,26 @@ public class PostingsList {
     
     /** Adds a new entry or creates it if it does not yet exist. */
     public void add( int docID, int offset ) {
+    	/*
     	for( PostingsEntry entry : list ) {
     		if( entry.docID == docID ) {
     			// If we find a match then we just add the offset and leave.
     			entry.offsetList.add(offset);
     			return;
     		}
+    	}
+    	*/
+    	
+    	if(!list.isEmpty()) {
+    	PostingsEntry lastEntry = list.get(list.size()-1);
+    	
+    	//Potential performance improvement merging both ifs into one and checking that if first one doesnt fulfill the second condition does not evaluate.
+    	
+    	if( lastEntry.docID == docID ) {
+    		// If we find a match then we just add the offset and leave.
+    		lastEntry.offsetList.add(offset);
+    		return;
+    	}
     	}
     	
     	// If there is no match then we create an empty offsetList, add the one offset we have, create a Postings entry and add docID and offsetList.
@@ -51,19 +65,6 @@ public class PostingsList {
     /** Adds a new entry. */
     public void add( PostingsEntry p) {
     	list.add(p);
-    }
-    
-    public String getValue() {
-    	
-    	Iterator<PostingsEntry> iter = list.iterator();
-    	
-    	String value = iter.next.getValue();
-    	
-    	while(iter.hasNext()) {
-    		value = value + ":" + iter.next().getValue();
-    	}
-    	
-    	return value;
     }
     
 }

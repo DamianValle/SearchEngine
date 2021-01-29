@@ -63,47 +63,73 @@ public class PersistentHashedIndex implements Index {
      *   IS THIS ENTRY REFERRING A LONG POINTER OR THE FULL <WORD, POSTINGSLISTS>?
      */ 
     public class Entry {
-        //
-        //  YOUR CODE HERE
-        //
-    	//to lo de aqui mio
-    	
+        
     	public String word;
-    	public ArrayList<PostingsList> postingsList;
+    	public PostingsList postingsList;
     	
-    	public Entry(String word, ArrayList<PostingsList> postingsList) {
+    	public Entry(String word, PostingsList postingsList) {
     		this.word = word;
         	this.postingsList = postingsList;
         }
     	
-    	public Entry(String word) {
-    		this word = word;
-    		
-    	}
-    	
-    	/**
-    	 * 	Computes hash in the range [0, 2100000] for a given word.
-    	 */
-    	public long getKey() {
-    		long hashCode = 0;
-    		for(int i = 0; i < this.word.length(); i++) {
-    			hashCode = (31 * hashCode + this.word.charAt(i))%TABLESIZE;
-    		}
-    		
-    		return hashCode;
-    	}
     	
     	/**
     	 * 	Gets the String serialization of an entry.
+    	 * 	The following syntax is used: word#docID1*offset1*offset2#docID2*offset1*offset2*offset3}
     	 */
-    	public String getValue() {
-    		return word + " " + this.postingsList.getValue();
+    	public String serializeEntry() {
+    		
+    		String serialized = this.word;
+    		Iterator<PostingsEntry> iter = this.postingsList.iterator();
+    		PostingsEntry entry;
+    		ArrayList<Integer> offsetList;
+    		
+    		while(iter.hasNext()) {
+    			entry = iter.next();
+    			
+    			serialized += "#" + Integer.toString(entry.docID);
+    			
+    			for( int offset : entry.offsetlist ) {
+    				serialized += "*" + Integer.toString(offset);
+    			}
+    			
+    		}
+    		
+    		serialized += "}";
+    		
+    		return serialized;
+    	}
+    	
+    	/**
+    	 * 	Gets an Entry object from a serialized entry.
+    	 * 	The following syntax is used: word#docID1*offset1*offset2#docID2*offset1*offset2*offset3}
+    	 */
+    	public static Entry deserializeEntry(String s) {
+    		
+    		String word;
+    		PostingsList postingsList;
+    		String[] split;
+    		String[] offsets;
+    		
+    		split = s.split("#");
+    		
+    		word = split[0];
+    		
+    		for( int i=1; i<split.length; i++ ) {
+    			offsets = split[i].split("*");
+    			
+    			for( int j=1; j<offsets.length; j++ ) {
+    				postingsList.add(offsets[0], offsets[j]);
+    			}
+    		}
+    		
+    		return new Entry(word, postingsList);
     	}
     }
 
 
     // ==================================================================
-
+    
     
     /**
      *  Constructor. Opens the dictionary file and the data file.
@@ -284,10 +310,10 @@ public class PersistentHashedIndex implements Index {
     public long getHash(String s) {
 		long hashCode = 0;
 		for(int i = 0; i < s.length(); i++) {
-			hashCode = (31 * hashCode + scharAt(i))%TABLESIZE;
+			hashCode = (31 * hashCode + s.charAt(i));
 		}
 		
-		return hashCode;
+		return hashCode%TABLESIZE;
 	}
     
     
