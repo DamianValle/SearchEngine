@@ -51,6 +51,14 @@ public class PostingsList {
     		// If we find a match then we just add the offset and leave.
     		lastEntry.offsetList.add(offset);
     		return;
+    	} else {
+    		for( PostingsEntry entry : list ) {
+        		if( entry.docID == docID ) {
+        			// If we find a match then we just add the offset and leave.
+        			entry.offsetList.add(offset);
+        			return;
+        		}
+        	}
     	}
     	}
     	
@@ -64,6 +72,7 @@ public class PostingsList {
     
     /** Adds a new entry. */
     public void add( PostingsEntry p) {
+    	
     	list.add(p);
     }
     

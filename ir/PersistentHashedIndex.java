@@ -10,6 +10,7 @@ package ir;
 import java.io.*;
 import java.util.*;
 import java.nio.charset.*;
+import java.nio.ByteBuffer;
 
 
 /*
@@ -57,6 +58,28 @@ public class PersistentHashedIndex implements Index {
 
 
     // ===================================================================
+    
+    public static long byteArrayToLong(byte[] bytes) {
+    	long l = 0;
+    	for (int i=0; i<8; i++) {
+    		l <<= 8;
+    		l ^= (long) bytes[i] & 0xff;
+    	}
+    	return l;
+    }
+    
+    public static byte[] longToByteArray(long data) {
+    	return new byte[] {
+    	(byte)((data >> 56) & 0xff),
+    	(byte)((data >> 48) & 0xff),
+    	(byte)((data >> 40) & 0xff),
+    	(byte)((data >> 32) & 0xff),
+    	(byte)((data >> 24) & 0xff),
+    	(byte)((data >> 16) & 0xff),
+    	(byte)((data >> 8 ) & 0xff),
+    	(byte)((data >> 0) & 0xff),
+    	};
+    }
 
     /**
      *   A helper class representing one entry in the dictionary hashtable.
@@ -89,13 +112,13 @@ public class PersistentHashedIndex implements Index {
     			
     			serialized += "#" + Integer.toString(entry.docID);
     			
-    			for( int offset : entry.offsetlist ) {
+    			for( int offset : entry.offsetList ) {
     				serialized += "*" + Integer.toString(offset);
     			}
     			
     		}
     		
-    		serialized += "}";
+    		serialized += "\n";
     		
     		return serialized;
     	}
@@ -104,10 +127,10 @@ public class PersistentHashedIndex implements Index {
     	 * 	Gets an Entry object from a serialized entry.
     	 * 	The following syntax is used: word#docID1*offset1*offset2#docID2*offset1*offset2*offset3}
     	 */
-    	public static Entry deserializeEntry(String s) {
+    	public Entry deserializeEntry(String s) {
     		
     		String word;
-    		PostingsList postingsList;
+    		PostingsList postingsList = new PostingsList();
     		String[] split;
     		String[] offsets;
     		
@@ -119,7 +142,7 @@ public class PersistentHashedIndex implements Index {
     			offsets = split[i].split("*");
     			
     			for( int j=1; j<offsets.length; j++ ) {
-    				postingsList.add(offsets[0], offsets[j]);
+    				postingsList.add(Integer.parseInt(offsets[0]), Integer.parseInt(offsets[j]));
     			}
     		}
     		
@@ -192,10 +215,21 @@ public class PersistentHashedIndex implements Index {
             dataFile.seek( ptr );
             byte[] data = new byte[8];
             dataFile.readFully( data );
-            return new Long(data);
+            //return new Long(data);
+            return byteArrayToLong(data);
         } catch ( IOException e ) {
             e.printStackTrace();
-            return null;
+            return (Long)null;
+        }
+    }
+    
+    void writeDictionary( long ptr, long dataPtr ) {
+    	try {
+            dataFile.seek( ptr );
+            byte[] data = longToByteArray(dataPtr);
+            dataFile.write( data );
+        } catch ( IOException e ) {
+            e.printStackTrace();
         }
     }
     
@@ -218,7 +252,7 @@ public class PersistentHashedIndex implements Index {
         //
     	//	mio
     	
-    	writeData(serialize(entry), ptr);
+    	writeData(entry.serializeEntry(), ptr);
     	
     }
 
@@ -232,7 +266,7 @@ public class PersistentHashedIndex implements Index {
         //  REPLACE THE STATEMENT BELOW WITH YOUR CODE 
         //
     	
-    	int entry_size = String.toInt(readData(ptr, 4));
+    	
     	
     	
     	
@@ -294,8 +328,24 @@ public class PersistentHashedIndex implements Index {
             // 
             //  YOUR CODE HERE
             //
+            String token;
+            PostingsList postingsList;
+            Entry entry;
+            long hash;
             
-            //	for all 
+            for (HashMap.Entry<String, PostingsList> item : index.entrySet()) {
+                token = item.getKey();
+                postingsList = item.getValue();
+                
+                hash = getHash(token);
+                writeDictionary(hash, free);
+                
+                entry = new Entry(token, postingsList);
+                
+                free += Long.valueOf(writeData(entry.serializeEntry(), free));
+                
+                // account for collissions?
+            }
             
         } catch ( IOException e ) {
             e.printStackTrace();
@@ -327,20 +377,19 @@ public class PersistentHashedIndex implements Index {
         //  REPLACE THE STATEMENT BELOW WITH YOUR CODE
         //
     	
+    	PostingsList postingsList = new PostingsList();
+    	
     	//	hacer hash de la palabra
     	long hash = getHash(token);
-    	
     	
     	//	mirar la entry del dictionary file
     	long ptr = readDictionary(hash);
     	
-    	
     	Entry e = readEntry(ptr);
-    	
     	
     	//	con el ptr de la entry coger la info del datafile i parsearla a un PostingsList
     	
-    	
+    	return e.postingsList;
     }
 
 
@@ -348,10 +397,6 @@ public class PersistentHashedIndex implements Index {
      *  Inserts this token in the main-memory hashtable.
      */
     public void insert( String token, int docID, int offset ) {
-        //
-        //  YOUR CODE HERE
-        //
-    	//to esto copiao del HashedIndex
     	PostingsList list = index.get(token);
     	if(list == null) {
     		list = new PostingsList();
@@ -370,4 +415,9 @@ public class PersistentHashedIndex implements Index {
         writeIndex();
         System.err.println( "done!" );
     }
+    
+    
+    
+    
+    
 }
