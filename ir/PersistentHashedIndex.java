@@ -95,10 +95,40 @@ public class PersistentHashedIndex implements Index {
         	this.postingsList = postingsList;
         }
     	
+    	/**
+    	 * 	Gets an Entry object from a serialized entry.
+    	 * 	The following syntax is used: word#docID1;offset1;offset2#docID2;offset1*offset2*offset3
+    	 * 
+    	 * 	Feisimo usar esto de constructor a ver si lo arreglo.
+    	 */
+    	public Entry(String s) {
+    		PostingsList postingsList = new PostingsList();
+    		String[] split;
+    		String[] offsets;
+    		
+    		split = s.split("#");
+    		
+    		this.word = split[0];
+    		
+    		System.err.println("this.word=" + this.word);
+    		
+    		for( int i=1; i<split.length; i++ ) {
+    			
+    			System.err.println(split[i]);
+    			
+    			offsets = split[i].split(";");
+    			
+    			for( int j=1; j<offsets.length; j++ ) {
+    				postingsList.add(Integer.parseInt(offsets[0]), Integer.parseInt(offsets[j]));
+    			}
+    		}
+    		
+    		this.postingsList = postingsList;
+    	}
     	
     	/**
     	 * 	Gets the String serialization of an entry.
-    	 * 	The following syntax is used: word#docID1*offset1*offset2#docID2*offset1*offset2*offset3}
+    	 * 	The following syntax is used: word#docID1;offset1;offset2#docID2;offset1;offset2;offset3
     	 */
     	public String serializeEntry() {
     		
@@ -113,41 +143,16 @@ public class PersistentHashedIndex implements Index {
     			serialized += "#" + Integer.toString(entry.docID);
     			
     			for( int offset : entry.offsetList ) {
-    				serialized += "*" + Integer.toString(offset);
+    				serialized += ";" + Integer.toString(offset);
     			}
     			
     		}
     		
-    		serialized += "\n";
+    		//serialized += "\n";
     		
     		return serialized;
     	}
     	
-    	/**
-    	 * 	Gets an Entry object from a serialized entry.
-    	 * 	The following syntax is used: word#docID1*offset1*offset2#docID2*offset1*offset2*offset3}
-    	 */
-    	public Entry deserializeEntry(String s) {
-    		
-    		String word;
-    		PostingsList postingsList = new PostingsList();
-    		String[] split;
-    		String[] offsets;
-    		
-    		split = s.split("#");
-    		
-    		word = split[0];
-    		
-    		for( int i=1; i<split.length; i++ ) {
-    			offsets = split[i].split("*");
-    			
-    			for( int j=1; j<offsets.length; j++ ) {
-    				postingsList.add(Integer.parseInt(offsets[0]), Integer.parseInt(offsets[j]));
-    			}
-    		}
-    		
-    		return new Entry(word, postingsList);
-    	}
     }
 
 
@@ -181,8 +186,15 @@ public class PersistentHashedIndex implements Index {
      */ 
     int writeData( String dataString, long ptr ) {
         try {
+        	//System.err.println("Printing this dataString: " + dataString);
             dataFile.seek( ptr );
-            byte[] data = dataString.getBytes();
+            
+            String finalString = String.format("%07d", dataString.getBytes().length) + dataString;
+            
+            byte[] data = finalString.getBytes();
+            //System.err.println("Size of 7 digits padded: " + Integer.toString(String.format("%07d", data.length).getBytes().length));
+            
+            //data = finalString.getBytes();
             dataFile.write( data );
             return data.length;
         } catch ( IOException e ) {
@@ -212,10 +224,10 @@ public class PersistentHashedIndex implements Index {
      */ 
     long readDictionary( long ptr ) {
         try {
+        	System.err.println(Long.toString(ptr));
             dataFile.seek( ptr );
             byte[] data = new byte[8];
             dataFile.readFully( data );
-            //return new Long(data);
             return byteArrayToLong(data);
         } catch ( IOException e ) {
             e.printStackTrace();
@@ -225,9 +237,11 @@ public class PersistentHashedIndex implements Index {
     
     void writeDictionary( long ptr, long dataPtr ) {
     	try {
-            dataFile.seek( ptr );
-            byte[] data = longToByteArray(dataPtr);
-            dataFile.write( data );
+    		System.err.println("Writing the dataPtr: " + Long.toString(dataPtr) + "\t en el ptr: " + Long.toString(ptr));
+            dictionaryFile.seek( ptr );
+            byte[] data = longToByteArray(dataPtr); //	8 bytes
+            System.err.println("data.length=" + Integer.toString(data.length));
+            dictionaryFile.write( data );
         } catch ( IOException e ) {
             e.printStackTrace();
         }
@@ -247,10 +261,6 @@ public class PersistentHashedIndex implements Index {
      *  @param ptr   The place in the dictionary file to store the entry
      */
     void writeEntry( Entry entry, long ptr ) {
-        //
-        //  YOUR CODE HERE
-        //
-    	//	mio
     	
     	writeData(entry.serializeEntry(), ptr);
     	
@@ -262,16 +272,18 @@ public class PersistentHashedIndex implements Index {
      *  @param ptr The place in the dictionary file where to start reading.
      */
     Entry readEntry( long ptr ) {   
-        //
-        //  REPLACE THE STATEMENT BELOW WITH YOUR CODE 
-        //
     	
+    	System.err.println("A ver que hay aqui: " + readData(ptr, 200));
     	
+    	String size = readData(ptr, 7);
     	
+    	int sizeint = Integer.parseInt(size);
     	
+    	String serializedEntry = readData(ptr+7, sizeint);
     	
+    	System.err.println(serializedEntry);
     	
-        return null;
+    	return new Entry(serializedEntry);
     }
 
 
@@ -324,10 +336,6 @@ public class PersistentHashedIndex implements Index {
             writeDocInfo();
 
             // Write the dictionary and the postings list
-
-            // 
-            //  YOUR CODE HERE
-            //
             String token;
             PostingsList postingsList;
             Entry entry;
@@ -337,7 +345,10 @@ public class PersistentHashedIndex implements Index {
                 token = item.getKey();
                 postingsList = item.getValue();
                 
-                hash = getHash(token);
+                //hash = getHash(token);
+                
+                hash = Math.abs(token.hashCode()%TABLESIZE);
+                
                 writeDictionary(hash, free);
                 
                 entry = new Entry(token, postingsList);
@@ -360,7 +371,12 @@ public class PersistentHashedIndex implements Index {
     public long getHash(String s) {
 		long hashCode = 0;
 		for(int i = 0; i < s.length(); i++) {
-			hashCode = (31 * hashCode + s.charAt(i));
+			hashCode = (31 * hashCode + Character.getNumericValue(s.charAt(i)));
+		}
+		
+		if(hashCode%TABLESIZE < 0) {
+			System.err.println("\n\n\n\n\n\n\n\n\n");
+			System.err.println(s + "has returned a negative hashCode.");
 		}
 		
 		return hashCode%TABLESIZE;
@@ -373,23 +389,34 @@ public class PersistentHashedIndex implements Index {
      *  if the term is not in the index.
      */
     public PostingsList getPostings( String token ) {
-        //
-        //  REPLACE THE STATEMENT BELOW WITH YOUR CODE
-        //
     	
-    	PostingsList postingsList = new PostingsList();
+        
     	
-    	//	hacer hash de la palabra
-    	long hash = getHash(token);
+    	System.err.println("El token es: " + token);
     	
-    	//	mirar la entry del dictionary file
+    	
+    	long hash = Math.abs(token.hashCode()%TABLESIZE);
+    	
+    	System.err.println("Hash: " + Long.toString(hash) + ". converted twice: " + Long.toString(byteArrayToLong(longToByteArray(hash))));
+    	
+    	System.err.println("Su hash es: " + Long.toString(hash));
+    	
     	long ptr = readDictionary(hash);
     	
-    	Entry e = readEntry(ptr);
     	
-    	//	con el ptr de la entry coger la info del datafile i parsearla a un PostingsList
+    	System.err.println("Nos vamos al ptr del dataFile: " + Long.toString(ptr));
     	
-    	return e.postingsList;
+    	//Entry e = readEntry(ptr);
+    	
+    	
+    	Entry e = readEntry(0L);
+    	
+    	if(e!=null) {
+    		return e.postingsList;
+    	} else {
+    		return null;
+    	}
+    	
     }
 
 
