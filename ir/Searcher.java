@@ -46,18 +46,9 @@ public class Searcher {
     	
     	for(String queryterm : queries) {
     		//System.err.println("Added " + queryterm + " to the query postings list.");
-    		postingsLists.add(index.getPostings(queryterm));
+    		
+        	postingsLists.add(index.getPostings(queryterm));
     	}
-    	
-    	/**
-    	//here iterate over query tokens
-    	String token = "a";
-    	postingsLists.add(index.getPostings(token));
-    	token = "cell";
-    	postingsLists.add(index.getPostings(token));
-    	token = "phone";
-    	postingsLists.add(index.getPostings(token));
-    	*/
     	
     	
     	if( queryType == QueryType.INTERSECTION_QUERY ) {
@@ -122,6 +113,10 @@ public class Searcher {
     		//p1.add(null);
     		//p2.add(null);
     		
+    		if(p1==null || p2==null) {
+    			return null;
+    		}
+    		
     		/**
     		System.err.println("p1 posting list: ");
     		for( int i = 0; i < p1.size(); i++ ) {
@@ -141,10 +136,24 @@ public class Searcher {
     		postingsEntry2 = p2.get(pe2_idx++);
     		
 			if( postingsEntry1.docID == postingsEntry2.docID ) {
-				//System.err.println("Match in the first one!");
+				System.err.println("Match in the first one!");
+				System.err.println(p1.size());
 				answer.add(postingsEntry1);
-				postingsEntry1 = p1.get(pe1_idx++);
-				postingsEntry2 = p2.get(pe2_idx++);
+				
+				if(pe1_idx >= p1.size()) {
+					postingsEntry1 = null;
+				} else {
+					postingsEntry1 = p1.get(pe1_idx++);
+				}
+				
+				if(pe2_idx >= p2.size()) {
+					postingsEntry2 = null;
+				} else {
+					postingsEntry2 = p2.get(pe2_idx++);
+				}
+				
+				//postingsEntry1 = p1.get(pe1_idx++);
+				//postingsEntry2 = p2.get(pe2_idx++);
 			}
     		
 			while( postingsEntry1 != null && postingsEntry2 != null ) {

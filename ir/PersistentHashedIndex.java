@@ -42,7 +42,7 @@ public class PersistentHashedIndex implements Index {
     public static final String DOCINFO_FNAME = "docInfo";
 
     /** The dictionary hash table on disk can fit this many entries. */
-    public static final long TABLESIZE = 2100001L;	//611953L;
+    public static final long TABLESIZE = 611953L; //2100001L;	//611953L;
 
     /** The dictionary hash table is stored in this file. */
     RandomAccessFile dictionaryFile;
@@ -110,11 +110,7 @@ public class PersistentHashedIndex implements Index {
     		
     		this.word = split[0];
     		
-    		System.err.println("this.word=" + this.word);
-    		
-    		for( int i=1; i<split.length; i++ ) {
-    			
-    			System.err.println(split[i]);
+    		for( int i=1; i<split.length; i++ )	{
     			
     			offsets = split[i].split(";");
     			
@@ -224,23 +220,39 @@ public class PersistentHashedIndex implements Index {
      */ 
     long readDictionary( long ptr ) {
         try {
-        	System.err.println(Long.toString(ptr));
-            dataFile.seek( ptr );
+        	
+            dictionaryFile.seek( ptr );
             byte[] data = new byte[8];
-            dataFile.readFully( data );
+            dictionaryFile.readFully( data );
+            System.err.println("\n\n\n\n Reading " + Long.toString(byteArrayToLong(data)) + " from dictionary at position ptr=" + Long.toString(ptr));
             return byteArrayToLong(data);
         } catch ( IOException e ) {
             e.printStackTrace();
+            System.err.println("Aqui queria yo llegar");
             return (Long)null;
         }
     }
     
+    boolean isDictionaryNull( long ptr ) {
+    	try {
+    		dictionaryFile.seek(ptr);
+    		byte[] data = new byte[8];
+    		dictionaryFile.readFully(data);
+    		System.err.println("isDictionaryNull():\tContent of the " + Long.toString(ptr) + " ptr. Cell: " + Long.toString(byteArrayToLong(data)));
+    		return byteArrayToLong(data)==0;
+    	} catch ( IOException e ) {
+            //e.printStackTrace();
+    		System.err.println("isDictionaryNull() IOException");
+    		return true;
+        }
+    }
+    
+    
     void writeDictionary( long ptr, long dataPtr ) {
     	try {
-    		System.err.println("Writing the dataPtr: " + Long.toString(dataPtr) + "\t en el ptr: " + Long.toString(ptr));
+    		//System.err.println("Writing the dataPtr: " + Long.toString(dataPtr) + "\t en el ptr: " + Long.toString(ptr));
             dictionaryFile.seek( ptr );
             byte[] data = longToByteArray(dataPtr); //	8 bytes
-            System.err.println("data.length=" + Integer.toString(data.length));
             dictionaryFile.write( data );
         } catch ( IOException e ) {
             e.printStackTrace();
@@ -272,8 +284,6 @@ public class PersistentHashedIndex implements Index {
      *  @param ptr The place in the dictionary file where to start reading.
      */
     Entry readEntry( long ptr ) {   
-    	
-    	System.err.println("A ver que hay aqui: " + readData(ptr, 200));
     	
     	String size = readData(ptr, 7);
     	
@@ -345,44 +355,49 @@ public class PersistentHashedIndex implements Index {
                 token = item.getKey();
                 postingsList = item.getValue();
                 
-                //hash = getHash(token);
-                
                 hash = Math.abs(token.hashCode()%TABLESIZE);
                 
+                if(token.equals("they")) {
+                	hash = 482480L;
+                }
+                
+                if(isDictionaryNull(hash)) {
+                	System.err.println(token + " escrita a la primera!");
+                	writeDictionary(hash, free);
+                } else {
+                	System.err.println("COLISION CON LA PALABRA " + token);
+                	collisions++;
+                	hash+=8;
+                	while(!isDictionaryNull(hash)) {
+                		System.err.println("Y otro salto mas...");
+                		hash+=8;
+                	}
+                	writeDictionary(hash, free);
+                }
+                
+                /**
+                System.err.println(hash);
+                
+                if(isDictionaryNull(hash)) {
+                	System.err.println(token + " ha dado null en el dictionary.");
+                } else {
+                	System.err.println(token + " NOOOO ha dado null en el dictionary.");
+                }
+                
+                
                 writeDictionary(hash, free);
+                */
                 
                 entry = new Entry(token, postingsList);
                 
                 free += Long.valueOf(writeData(entry.serializeEntry(), free));
                 
-                // account for collissions?
             }
-            
         } catch ( IOException e ) {
             e.printStackTrace();
         }
         System.err.println( collisions + " collisions." );
     }
-
-
-    // ==================================================================
-
-
-    public long getHash(String s) {
-		long hashCode = 0;
-		for(int i = 0; i < s.length(); i++) {
-			hashCode = (31 * hashCode + Character.getNumericValue(s.charAt(i)));
-		}
-		
-		if(hashCode%TABLESIZE < 0) {
-			System.err.println("\n\n\n\n\n\n\n\n\n");
-			System.err.println(s + "has returned a negative hashCode.");
-		}
-		
-		return hashCode%TABLESIZE;
-	}
-    
-    
     
     /**
      *  Returns the postings for a specific term, or null
@@ -390,32 +405,27 @@ public class PersistentHashedIndex implements Index {
      */
     public PostingsList getPostings( String token ) {
     	
-        
-    	
-    	System.err.println("El token es: " + token);
-    	
-    	
     	long hash = Math.abs(token.hashCode()%TABLESIZE);
     	
-    	System.err.println("Hash: " + Long.toString(hash) + ". converted twice: " + Long.toString(byteArrayToLong(longToByteArray(hash))));
+    	Entry e;
+    	long ptr;
     	
-    	System.err.println("Su hash es: " + Long.toString(hash));
-    	
-    	long ptr = readDictionary(hash);
-    	
-    	
-    	System.err.println("Nos vamos al ptr del dataFile: " + Long.toString(ptr));
-    	
-    	//Entry e = readEntry(ptr);
-    	
-    	
-    	Entry e = readEntry(0L);
-    	
-    	if(e!=null) {
-    		return e.postingsList;
-    	} else {
-    		return null;
+    	while(!isDictionaryNull(hash)) { // Look for a token that is NOT in the index AND when its hash does not have a pointer in the dictionaryFile.
+    		
+    		ptr = readDictionary(hash);
+    		
+    		e = readEntry(ptr);
+    		
+    		if(e.word.equals(token)) {
+    			return e.postingsList;
+    		}
+    		
+    		hash++;
     	}
+    	
+    	System.err.println(token + " ha dao null.");
+    	
+    	return null;
     	
     }
 
