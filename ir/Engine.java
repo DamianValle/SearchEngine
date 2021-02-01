@@ -17,7 +17,8 @@ public class Engine {
 
     /** The inverted index. */
     //Index index = new HashedIndex();
-    Index index = new PersistentHashedIndex();
+    //Index index = new PersistentHashedIndex();
+	Index index = new ScalablePersistentHashedIndex();
 
     /** The indexer creating the search index. */
     Indexer indexer;

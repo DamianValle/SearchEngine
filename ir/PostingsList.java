@@ -32,15 +32,6 @@ public class PostingsList {
     
     /** Adds a new entry or creates it if it does not yet exist. */
     public void add( int docID, int offset ) {
-    	/*
-    	for( PostingsEntry entry : list ) {
-    		if( entry.docID == docID ) {
-    			// If we find a match then we just add the offset and leave.
-    			entry.offsetList.add(offset);
-    			return;
-    		}
-    	}
-    	*/
     	
     	if(!list.isEmpty()) {
     	PostingsEntry lastEntry = list.get(list.size()-1);
