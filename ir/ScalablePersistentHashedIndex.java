@@ -28,16 +28,22 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
 	
 	private TreeMap<String,PostingsList> index = new TreeMap<String,PostingsList>();
 	
-	public static final int LIMIT_TOKENS = 11;
+	public static final int LIMIT_TOKENS = 100;
 	
 	public static int tokens_inserted = 0;
 	
 	public static final long TABLESIZE = 611953L; //3499999L;
 	
+	public int first_insert = 0;
+	
+	public int dataFileCount = 0;
+	
 	/**
      *  Inserts this token in the main-memory hashtable.
      */
     public void insert( String token, int docID, int offset ) {
+    	
+    	Merger merge_thread = new Merger(dataFileCount);
     	
     	PostingsList list = index.get(token);
     	if(list == null) {
@@ -48,24 +54,83 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
     	
     	if(++tokens_inserted == LIMIT_TOKENS) {
     		
-    		//tokens_inserted = 0;
     		System.err.println("Alcanzado limite de tokens.");
     		
-    		writeIndex();
-    		index.clear();
+    		if(first_insert == 0) {
+        		System.err.println("This is my first insert");
+        		first_insert++;
+        		try {
+        			RandomAccessFile dataFile = new RandomAccessFile( "./index/data_merged" + Integer.toString(dataFileCount), "rw" );
+        		} catch (Exception e) {
+        			e.printStackTrace();
+        		}
+        		writeIndex(dataFile);
+        		dataFileCount--;
+        		
+        	} else if (first_insert == 1){
+        		first_insert++;
+        		System.err.println("This is my second insert");
+        		
+        		try {
+        			RandomAccessFile dataFile = new RandomAccessFile( "./index/data" + Integer.toString(dataFileCount), "rw" );
+        		} catch (Exception e) {
+        			e.printStackTrace();
+        		}
+        		writeIndex(dataFile); //ojo
+        		
+        		merge_thread = new Merger(dataFileCount);
+        		merge_thread.start();
+        		
+        	} else {
+        		try {
+        			RandomAccessFile dataFile = new RandomAccessFile( "./index/data" + Integer.toString(dataFileCount), "rw" );
+        		} catch (Exception e) {
+        			e.printStackTrace();
+        		}
+        		writeIndex(dataFile);
+        		
+        		try {
+        			merge_thread.join();
+        		} catch (Exception e) {
+        			e.printStackTrace();
+        		}
+        		merge_thread = new Merger(dataFileCount);
+        		merge_thread.start();
+        	}
+    		
+    		dataFileCount++;
+    		tokens_inserted = 0;
     		free = 0L;
+    		index.clear();
     		
-    		System.err.println("EEEEEEEscrito.");
-    		
-    		Merger merge_thread = new Merger();
-    		merge_thread.start();
     	}
+    }
+    
+    /**
+     *  Writes data to the data file at a specified place.
+     *
+     *  @return The number of bytes written.
+     */ 
+    int writeData( String dataString, long ptr, RandomAccessFile dataFile ) {
+        try {
+            dataFile.seek( ptr );
+            
+            String finalString = String.format("%07d", dataString.getBytes().length) + dataString;
+            
+            byte[] data = finalString.getBytes();
+            
+            dataFile.write( data );
+            return data.length;
+        } catch ( IOException e ) {
+            e.printStackTrace();
+            return -1;
+        }
     }
     
     /**
      *  Write the index to files.
      */
-    public void writeIndex() {
+    public void writeIndex(RandomAccessFile dataFile) {
         String token;
         PostingsList postingsList;
         Entry entry;
@@ -74,7 +139,7 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
                 
             entry = new Entry(item.getKey(), item.getValue());
                 
-            free += Long.valueOf(writeData(entry.serializeEntry(), free));
+            free += Long.valueOf(writeData(entry.serializeEntry(), free, dataFile));
         }
     }
   

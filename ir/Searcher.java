@@ -136,7 +136,7 @@ public class Searcher {
     		postingsEntry2 = p2.get(pe2_idx++);
     		
 			if( postingsEntry1.docID == postingsEntry2.docID ) {
-				System.err.println(p1.size());
+				//System.err.println(p1.size());
 				answer.add(postingsEntry1);
 				
 				if(pe1_idx >= p1.size()) {

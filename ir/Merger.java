@@ -129,11 +129,11 @@ public class Merger extends Thread {
     	
     }
 	
-	public Merger() {
+	public Merger(int dataFileCount) {
 		try {
-			dataFile1 = new RandomAccessFile( INDEXDIR + "/" + DATA_FNAME1, "rw" );
-			dataFile2 = new RandomAccessFile( INDEXDIR + "/" + DATA_FNAME2, "rw" );
-			dataFileMerged = new RandomAccessFile( INDEXDIR + "/" + DATA_FNAME3, "rw" );
+			dataFile1 = new RandomAccessFile( "./index/data" + Integer.toString(dataFileCount), "rw" );
+			dataFile2 = new RandomAccessFile( "./index/data_merged" + Integer.toString(dataFileCount), "rw" );
+			dataFileMerged = new RandomAccessFile( "./index/data_merged" + Integer.toString(dataFileCount+1), "rw" );
         } catch ( IOException e ) {
             e.printStackTrace();
         }
@@ -205,12 +205,15 @@ public class Merger extends Thread {
 			dataFile1.seek(ptr1);
 			dataFile2.seek(ptr2);
 		
-			while(true) {
+			while(ptr1 < dataFile1.length() - 5 && ptr2 < dataFile2.length()) {
 				
 				entry1 = readEntry(ptr1, dataFile1);
 				entry2 = readEntry(ptr2, dataFile2);
 				
+				System.err.println(entry1.word + "\t" + entry2.word);
+				
 				if(entry1.word.equals(entry2.word)) {
+					System.err.println(entry1.word + " and " + entry2.word + " are equal.");
 					postingsLists.add(entry1.postingsList);
 					postingsLists.add(entry2.postingsList);
 					
@@ -222,6 +225,8 @@ public class Merger extends Thread {
 					
 					ptr1 += 7 + Integer.parseInt(readData(ptr1, 7, dataFile1));
 					ptr2 += 7 + Integer.parseInt(readData(ptr2, 7, dataFile2));
+					
+					
 				} else if (entry1.word.compareTo(entry2.word) < 0) {
 					System.err.println(entry1.word + " es mas pequeña que " + entry2.word);
 					
@@ -239,6 +244,8 @@ public class Merger extends Thread {
 			e.printStackTrace();
 			System.err.println("Sacabao el merge");
 		}
+		
+		System.err.println("Intentando borrar el data_merge");
 		
 		
 	}
@@ -294,7 +301,7 @@ public class Merger extends Thread {
     		postingsEntry2 = p2.get(pe2_idx++);
     		
 			if( postingsEntry1.docID == postingsEntry2.docID ) {
-				System.err.println(p1.size());
+				
 				answer.add(postingsEntry1);
 				
 				if(pe1_idx >= p1.size()) {
