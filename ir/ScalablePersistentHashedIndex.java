@@ -279,13 +279,11 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
         
         //lastMerge();
         
-        System.err.println("A que acabe el ultmio merge");
         try {
     		merge_thread.join();
     	} catch(Exception e) {
     		e.printStackTrace();
     	}
-        System.err.println("Acabao el ultmio merge");
         
         renameLastMerge(dataFileCount);
         
