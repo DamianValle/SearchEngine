@@ -28,7 +28,7 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
 	
 	private TreeMap<String,PostingsList> index = new TreeMap<String,PostingsList>();
 	
-	public static final int LIMIT_TOKENS = 300000;
+	public static final int LIMIT_TOKENS = 100000;//300000;
 	
 	public static int tokens_inserted = 0;
 	
@@ -239,8 +239,7 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
     			ptr += 9 + sizeint;
     		}
     	} catch(Exception e) {
-    		e.printStackTrace();
-    		System.err.println("Error in CreateDictionary()");
+    		System.err.println("Dictionary done!");
     	}
     	
     }
