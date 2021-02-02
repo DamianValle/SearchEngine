@@ -130,6 +130,9 @@ public class Merger extends Thread {
     }
 	
 	public Merger(int dataFileCount) {
+		System.err.println("Started merger with dataFileCount: " + Integer.toString(dataFileCount));
+		//System.err.println("data" + Integer.toString(dataFileCount) + " and data_merged" + Integer.toString(dataFileCount) + " should exist now.");
+		
 		try {
 			dataFile1 = new RandomAccessFile( "./index/data" + Integer.toString(dataFileCount), "rw" );
 			dataFile2 = new RandomAccessFile( "./index/data_merged" + Integer.toString(dataFileCount), "rw" );
@@ -199,75 +202,174 @@ public class Merger extends Thread {
 		
 		try {
 			
-			System.err.println("Length of dataFile1: " + dataFile1.length());
-			System.err.println("Length of dataFile2: " + dataFile2.length());
-			
 			dataFile1.seek(ptr1);
 			dataFile2.seek(ptr2);
 		
-			while(ptr1 < dataFile1.length() - 5 && ptr2 < dataFile2.length()) {
+			while(ptr1 < dataFile1.length()-5 && ptr2 < dataFile2.length()-5) {
+				
+				/**
+				System.err.println("while(ptr1 < dataFile1.length()-5 && ptr2 < dataFile2.length()-5) {");
+				System.err.println("ptr1: " + Long.toString(ptr1) + "\ndataFile1.length: " + Long.toString(dataFile1.length()));
+				System.err.println("ptr2: " + Long.toString(ptr2) + "\ndataFile2.length: " + Long.toString(dataFile2.length()));
+				System.err.println();
+				*/
+				
 				
 				entry1 = readEntry(ptr1, dataFile1);
 				entry2 = readEntry(ptr2, dataFile2);
 				
-				System.err.println(entry1.word + "\t" + entry2.word);
+				//System.err.println("Read entry from dataFile1: " + entry1.word);
+				//System.err.println("Read entry from dataFile2: " + entry1.word);
+				//System.err.println();
+				
+				//System.err.println(entry1.word + "\t" + entry2.word);
 				
 				if(entry1.word.equals(entry2.word)) {
-					System.err.println(entry1.word + " and " + entry2.word + " are equal.");
-					postingsLists.add(entry1.postingsList);
-					postingsLists.add(entry2.postingsList);
+					//System.err.println(entry1.word + " and " + entry2.word + " are equal.");
 					
-					postingsList = postingsIntersection(postingsLists);
+					postingsList = mergePostingsLists(entry1.postingsList, entry2.postingsList);
 					
 					mergedEntry = new Entry(entry1.word, postingsList);
 					
 					merged_free += writeData(mergedEntry.serializeEntry(), merged_free, dataFileMerged);
 					
+					/**
+					System.err.println(entry1.serializeEntry());
+					System.err.println();
+					System.err.println(entry2.serializeEntry());
+					System.err.println();
+					System.err.println(mergedEntry.serializeEntry());
+					*/
+					
+					//Thread.sleep(1000);
+					
+					
 					ptr1 += 7 + Integer.parseInt(readData(ptr1, 7, dataFile1));
 					ptr2 += 7 + Integer.parseInt(readData(ptr2, 7, dataFile2));
 					
-					
 				} else if (entry1.word.compareTo(entry2.word) < 0) {
-					System.err.println(entry1.word + " es mas pequeña que " + entry2.word);
 					
 					merged_free += writeData(entry1.serializeEntry(), merged_free, dataFileMerged);
 					
 					ptr1 += 7 + Integer.parseInt(readData(ptr1, 7, dataFile1));
+					
 				} else {
 					merged_free += writeData(entry2.serializeEntry(), merged_free, dataFileMerged);
 					
 					ptr2 += 7 + Integer.parseInt(readData(ptr2, 7, dataFile2));
 				}
-				
 			}
+			
+			System.err.println("Hemos salio");
+			
+			/**
+			
+			if(ptr1 < dataFile1.length()-5) {
+				while(ptr1 < dataFile1.length()-5) {
+					
+					entry1 = readEntry(ptr1, dataFile1);
+					
+					merged_free += writeData(entry1.serializeEntry(), merged_free, dataFileMerged);
+					
+					ptr1 += 7 + Integer.parseInt(readData(ptr1, 7, dataFile1));
+				}
+			} else if(ptr2 < dataFile2.length()-5) {
+					while(ptr2 < dataFile2.length()-5) {
+					
+					entry2 = readEntry(ptr2, dataFile2);
+					
+					merged_free += writeData(entry2.serializeEntry(), merged_free, dataFileMerged);
+					
+					ptr2 += 7 + Integer.parseInt(readData(ptr2, 7, dataFile2));
+				}
+			}
+			*/
+			
 		} catch(Exception e) {
 			e.printStackTrace();
-			System.err.println("Sacabao el merge");
+			System.err.println("Ha saltao error del merge eof probablemente.");
 		}
 		
-		System.err.println("Intentando borrar el data_merge");
+		//dataFile1.close();
+		//dataFile2.close();
+		//dataFileMerged.close();
 		
+		System.err.println("Merge bien hecho (creo)");
 		
 	}
 	
-	public PostingsList postingsIntersection(ArrayList<PostingsList> postingsLists) {
-    	PostingsList answer;
+	public PostingsList mergePostingsLists(PostingsList p1, PostingsList p2) {
+		
+    	PostingsList answer = new PostingsList();
+    	
+    	int p1_idx = 0;
+    	int p2_idx = 0;
+    	
+    	PostingsEntry postingsEntry1, postingsEntry2;
+    	ArrayList<Integer> offsets;
+    	
+    	while(p1_idx < p1.size() && p2_idx < p2.size()) {
+    		
+    		postingsEntry1 = p1.get(p1_idx);
+    		postingsEntry2 = p2.get(p2_idx);
+    		
+    		if(postingsEntry1.docID == postingsEntry2.docID) {
+    			
+    			offsets = mergeOffsets(postingsEntry1.offsetList, postingsEntry2.offsetList);
+    			answer.add(new PostingsEntry(postingsEntry1.docID, offsets));
+    			
+    			p1_idx++;
+    			p2_idx++;
+    			
+    		} else if (postingsEntry1.docID < postingsEntry2.docID) {
+    			answer.add(postingsEntry1);
+    			p1_idx++;
+    		} else {
+    			answer.add(postingsEntry2);
+    			p2_idx++;
+    		}
+    	}
+    	
+    	if(p1_idx < p1.size()) {
+    		for(int i=p1_idx; i<p1.size(); i++) {
+    			answer.add(p1.get(i));
+    		}
+    	} else if (p2_idx < p2.size()) {
+    		for(int i=p2_idx; i<p2.size(); i++) {
+    			answer.add(p2.get(i));
+    		}
+    	}
+    	
+    	return answer;
+	}
+	
+	public ArrayList<Integer> mergeOffsets(ArrayList<Integer> offsets1, ArrayList<Integer> offsets2) {
+		HashSet<Integer> hashset = new HashSet<>();
+		hashset.addAll(offsets1);
+		hashset.addAll(offsets2);
+		
+		return new ArrayList<>(hashset);
+	}
+	/**
+	public PostingsList postingsIntersection(PostingsList p1, PostingsList p2) {
+		
+    	PostingsList answer = new PostingsList();
+    	
+    	int p1_idx = 0;
+    	int p2_idx = 0;
+    	
+    	
     	
     	Iterator<PostingsList> iter = postingsLists.iterator();
     	
     	PostingsList p1 = iter.next();
     	PostingsList p2; // = iter.next(); I need to put this inside the do while so that after the first one you can keep iterating.
     	
-    	/**
-    	for( int i = 0; i < p1.size(); i++ ) {
-    		System.err.println(p1.get(i).docID);
-    	} // Checks if docIDs are sorted in ascending order.
-    	*/
-    	
-    	//Iterator<PostingsEntry> postingsEntryIterator1, postingsEntryIterator2;
     	PostingsEntry postingsEntry1, postingsEntry2;
     	
     	int pe1_idx, pe2_idx;
+    	
+    	HashSet<Integer> hashset; 
     	
     	do {
     		
@@ -275,24 +377,16 @@ public class Merger extends Thread {
     		
     		p2 = iter.next();
     		
-    		//p1.add(null);
-    		//p2.add(null);
-    		
-    		if(p1==null || p2==null) {
+    		if(p1==null && p2==null) {
+    			System.err.println("Ambos son null");
     			return null;
+    		} else if(p1==null) {
+    			System.err.println("Uno null");
+    			return p2;
+    		} else if(p2==null) {
+    			System.err.println("Uno null");
+    			return p1;
     		}
-    		
-    		/**
-    		System.err.println("p1 posting list: ");
-    		for( int i = 0; i < p1.size(); i++ ) {
-        		System.err.println(p1.get(i).docID);
-        	}
-    		
-    		System.err.println("p2 posting list: ");
-    		for( int i = 0; i < p2.size(); i++ ) {
-        		System.err.println(p2.get(i).docID);
-        	}
-        	*/
     		
     		pe1_idx = 0;
     		pe2_idx = 0;
@@ -302,7 +396,11 @@ public class Merger extends Thread {
     		
 			if( postingsEntry1.docID == postingsEntry2.docID ) {
 				
-				answer.add(postingsEntry1);
+				hashset = new HashSet<>();
+				hashset.addAll(postingsEntry1.offsetList);
+				hashset.addAll(postingsEntry2.offsetList);
+				
+				answer.add(new PostingsEntry(postingsEntry1.docID, new ArrayList<>(hashset)));
 				
 				if(pe1_idx >= p1.size()) {
 					postingsEntry1 = null;
@@ -315,18 +413,17 @@ public class Merger extends Thread {
 				} else {
 					postingsEntry2 = p2.get(pe2_idx++);
 				}
-				
-				//postingsEntry1 = p1.get(pe1_idx++);
-				//postingsEntry2 = p2.get(pe2_idx++);
 			}
     		
 			while( postingsEntry1 != null && postingsEntry2 != null ) {
-				
-    			//System.err.println("p1 docID: " + postingsEntry1.docID + " ||| p2 docID: " + postingsEntry2.docID);
     			
     			if( postingsEntry1.docID == postingsEntry2.docID ) {
-    				//System.err.println("Found match!");
-    				answer.add(postingsEntry1);
+    				
+    				hashset = new HashSet<>();
+    				hashset.addAll(postingsEntry1.offsetList);
+    				hashset.addAll(postingsEntry2.offsetList);
+    				
+    				answer.add(new PostingsEntry(postingsEntry1.docID, new ArrayList<>(hashset)));
     				
     				if(pe1_idx >= p1.size()) {
     					postingsEntry1 = null;
@@ -342,12 +439,18 @@ public class Merger extends Thread {
     				
     				
     			} else if ( postingsEntry1.docID < postingsEntry2.docID ) {
+    				
+    				answer.add(postingsEntry1);
+    				
     				if(pe1_idx >= p1.size()) {
     					postingsEntry1 = null;
     				} else {
     					postingsEntry1 = p1.get(pe1_idx++);
     				}
     			} else {
+    				
+    				answer.add(postingsEntry2);
+    				
     				if(pe2_idx >= p2.size()) {
     					postingsEntry2 = null;
     				} else {
@@ -357,10 +460,21 @@ public class Merger extends Thread {
     		}
 			
 			
-    		
+			if(postingsEntry1 != null) {
+				answer.add(postingsEntry1);
+				while( (pe1_idx) < p1.size() ) {
+					answer.add( p1.get(pe1_idx++) );
+				}
+			} else if(postingsEntry2 != null) {
+				answer.add(postingsEntry2);
+				while( (pe2_idx) < p2.size() ) {
+					answer.add( p2.get(pe2_idx++) );
+					System.err.println("atascao");
+				}
+			}
+			
+			
     		if( answer.size() > 0 && iter.hasNext() ) {
-    			//System.out.println("Iteramos nueva palabra.");
-    			//System.out.println("answer size: " + answer.size());
     			p1 = answer;
     		}
     		
@@ -369,6 +483,6 @@ public class Merger extends Thread {
     	
     	return answer;
     }
-	
+	*/
 	
 }
