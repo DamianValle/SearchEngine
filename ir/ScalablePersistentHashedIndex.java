@@ -28,11 +28,11 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
 	
 	private TreeMap<String,PostingsList> index = new TreeMap<String,PostingsList>();
 	
-	public static final int LIMIT_TOKENS = 1000000;
+	public static final int LIMIT_TOKENS = 300000;
 	
 	public static int tokens_inserted = 0;
 	
-	public static final long TABLESIZE = 611953L; //3499999L;
+	public static final long TABLESIZE = 3499999L;
 	
 	public int first_insert = 0;
 	
@@ -42,7 +42,7 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
 	
 	public Merger merge_thread;
 	
-	public File toDelete;
+	public File toDelete, toDeleteMerge;
 	
 	RandomAccessFile finalDataFile;
 	
@@ -59,7 +59,9 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
     	list.add(docID, offset);
     	index.put(token, list);
     	
-    	if(++tokens_inserted == LIMIT_TOKENS) {
+    	tokens_inserted = index.size();
+    	
+    	if(tokens_inserted == LIMIT_TOKENS) {
     		
     		System.err.println("Alcanzado limite de tokens.");
     		
@@ -94,7 +96,7 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
         		
         	} else {
         		
-        		System.err.println("This is the insert numer: " + Integer.toString(first_insert++));
+        		System.err.println("This is the insert numero: " + Integer.toString(first_insert++));
         		try {
         			dataFile = new RandomAccessFile( "./index/data" + Integer.toString(dataFileCount), "rw" );
         			System.err.println("Created data" + Integer.toString(dataFileCount));
@@ -103,13 +105,22 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
             		
             		
             		
-            		toDelete = new File("./index/data" + Integer.toString(dataFileCount-2)); //probably -1 pero que pasa con el merge_thread?
+            		toDelete = new File("./index/data" + Integer.toString(dataFileCount-2));
+            		toDeleteMerge = new File("./index/data_merged" + Integer.toString(dataFileCount-2));
             		
             		if (toDelete.delete()) { 
             		      System.out.println("Deleted the file: " + toDelete.getName());
             		} else {
             		      System.out.println("Failed to delete the file.");
             		}
+            		
+            		if (toDeleteMerge.delete()) {
+            			System.out.println("Deleted the merge file: " + toDeleteMerge.getName());
+            		} else {
+            			System.out.println("Failed to delete the merge file.");
+            		}
+            		
+            		
             		
         		} catch (Exception e) {
         			e.printStackTrace();
@@ -128,6 +139,13 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
     		dataFileCount++;
     		tokens_inserted = 0;
     		free = 0L;
+    		try {
+    			writeDocInfo();
+    		} catch (Exception e) {
+    			System.err.println("Failed writedocinfo.");
+    			e.printStackTrace();
+    		}
+    		
     		index.clear();
     		
     	}
@@ -142,7 +160,7 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
         try {
             dataFile.seek( ptr );
             
-            String finalString = String.format("%07d", dataString.getBytes().length) + dataString;
+            String finalString = String.format("%09d", dataString.getBytes().length) + dataString;
             
             byte[] data = finalString.getBytes();
             
@@ -183,6 +201,7 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
     }
   
     public void createDictionary() {
+    	System.err.println("Creating dictionary file...");
     	try {
     		finalDataFile = new RandomAccessFile( "./index/data", "rw" );
     	} catch (Exception e) {
@@ -200,9 +219,9 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
     		while(true) {
     			
     			finalDataFile.seek(ptr);
-    			sizeint = Integer.parseInt(readFinalData(ptr, 7, finalDataFile));
+    			sizeint = Integer.parseInt(readFinalData(ptr, 9, finalDataFile));
     	
-    			serializedEntry = readFinalData(ptr+7, sizeint, finalDataFile);
+    			serializedEntry = readFinalData(ptr+9, sizeint, finalDataFile);
     			
     			entry = new Entry(serializedEntry);
     			
@@ -217,7 +236,7 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
                 
                 writeDictionary(hash, ptr);
     			
-    			ptr += 7 + sizeint;
+    			ptr += 9 + sizeint;
     		}
     	} catch(Exception e) {
     		e.printStackTrace();
@@ -236,8 +255,8 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
 		      System.out.println("Failed to delete the file.");
 		}
     	
-    	File data_merged = new File("./index/data_merged" + Integer.toString(dataFileCount));
-    	File data = new File("./index/data");
+    	File data_merged = new File("index/data_merged" + Integer.toString(dataFileCount));
+    	File data = new File("index/data");
     	
     	if(data_merged.renameTo(data)) {
     		System.err.println("Rename success");
@@ -248,20 +267,41 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
     
     public void lastMerge() {
     	
+    	
     	try {
     		dataFile = new RandomAccessFile( "./index/data" + Integer.toString(dataFileCount), "rw" );
     		System.err.println("Created data" + Integer.toString(dataFileCount));
     		writeIndex(dataFile);
-    		dataFile.close();
+    		//dataFile.close();
+    		
+    		try {
+        		merge_thread.join();
+        	} catch(Exception e) {
+        		e.printStackTrace();
+        	}
+    		
+    		
+    		merge_thread = new Merger(dataFileCount);
+    		merge_thread.start();
+    		
+    		try {
+        		merge_thread.join();
+        	} catch(Exception e) {
+        		e.printStackTrace();
+        	}
+    		
+    		
     	} catch(Exception e) {
     		e.printStackTrace();
     	}
     	
-    	try {
-    		merge_thread.join();
-    	} catch(Exception e) {
-    		e.printStackTrace();
-    	}
+    	
+    	
+    	dataFileCount++;
+    	
+    	
+    	
+    	System.err.println("Last merge done");
     }
     
     /**
@@ -277,17 +317,13 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
         
         System.err.println(dataFileCount);
         
-        //lastMerge();
-        
-        try {
-    		merge_thread.join();
-    	} catch(Exception e) {
-    		e.printStackTrace();
-    	}
+        lastMerge();
         
         renameLastMerge(dataFileCount);
         
         createDictionary();
+        
+        System.err.println("ALL DONE!!!");
     }
 	
     

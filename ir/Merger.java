@@ -35,6 +35,8 @@ public class Merger extends Thread {
     /** The data (the PostingsLists) are stored in this file. */
     RandomAccessFile dataFileMerged;
     
+    String filenames;
+    
     private long merged_free = 0L;
     
     /**
@@ -137,6 +139,8 @@ public class Merger extends Thread {
 			dataFile1 = new RandomAccessFile( "./index/data" + Integer.toString(dataFileCount), "rw" );
 			dataFile2 = new RandomAccessFile( "./index/data_merged" + Integer.toString(dataFileCount), "rw" );
 			dataFileMerged = new RandomAccessFile( "./index/data_merged" + Integer.toString(dataFileCount+1), "rw" );
+			
+			filenames = "./index/data" + Integer.toString(dataFileCount) + "   ./index/data_merged" + Integer.toString(dataFileCount);
         } catch ( IOException e ) {
             e.printStackTrace();
         }
@@ -144,8 +148,8 @@ public class Merger extends Thread {
 	
 	public Entry readEntry(long ptr, RandomAccessFile dataFile) {
 		
-		int size = Integer.parseInt(readData(ptr, 7, dataFile));
-		String serializedEntry = readData(ptr+7, size, dataFile);
+		int size = Integer.parseInt(readData(ptr, 9, dataFile));
+		String serializedEntry = readData(ptr+9, size, dataFile);
 		
 		return new Entry(serializedEntry);
 	}
@@ -174,7 +178,7 @@ public class Merger extends Thread {
         try {
             dataFile.seek( ptr );
             
-            String finalString = String.format("%07d", dataString.getBytes().length) + dataString;
+            String finalString = String.format("%09d", dataString.getBytes().length) + dataString;
             
             byte[] data = finalString.getBytes();
             
@@ -244,19 +248,19 @@ public class Merger extends Thread {
 					//Thread.sleep(1000);
 					
 					
-					ptr1 += 7 + Integer.parseInt(readData(ptr1, 7, dataFile1));
-					ptr2 += 7 + Integer.parseInt(readData(ptr2, 7, dataFile2));
+					ptr1 += 9 + Integer.parseInt(readData(ptr1, 9, dataFile1));
+					ptr2 += 9 + Integer.parseInt(readData(ptr2, 9, dataFile2));
 					
 				} else if (entry1.word.compareTo(entry2.word) < 0) {
 					
 					merged_free += writeData(entry1.serializeEntry(), merged_free, dataFileMerged);
 					
-					ptr1 += 7 + Integer.parseInt(readData(ptr1, 7, dataFile1));
+					ptr1 += 9 + Integer.parseInt(readData(ptr1, 9, dataFile1));
 					
 				} else {
 					merged_free += writeData(entry2.serializeEntry(), merged_free, dataFileMerged);
-					
-					ptr2 += 7 + Integer.parseInt(readData(ptr2, 7, dataFile2));
+				
+					ptr2 += 9 + Integer.parseInt(readData(ptr2, 9, dataFile2));
 				}
 			}
 			
@@ -271,7 +275,7 @@ public class Merger extends Thread {
 					
 					merged_free += writeData(entry1.serializeEntry(), merged_free, dataFileMerged);
 					
-					ptr1 += 7 + Integer.parseInt(readData(ptr1, 7, dataFile1));
+					ptr1 += 9 + Integer.parseInt(readData(ptr1, 9, dataFile1));
 				}
 			} else if(ptr2 < dataFile2.length()-5) {
 					while(ptr2 < dataFile2.length()-5) {
@@ -280,13 +284,15 @@ public class Merger extends Thread {
 					
 					merged_free += writeData(entry2.serializeEntry(), merged_free, dataFileMerged);
 					
-					ptr2 += 7 + Integer.parseInt(readData(ptr2, 7, dataFile2));
+					ptr2 += 9 + Integer.parseInt(readData(ptr2, 9, dataFile2));
 				}
 			}
 			*/
 			
 		} catch(Exception e) {
 			e.printStackTrace();
+			System.err.println("ptr1 y ptr2: " + Long.toString(ptr1) + " " + Long.toString(ptr2));
+			System.err.println(filenames);
 			System.err.println("Ha saltao error del merge eof probablemente.");
 		}
 		
