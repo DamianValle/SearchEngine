@@ -224,9 +224,9 @@ public class PersistentHashedIndex implements Index {
         try {
             dictionaryFile.seek( ptr );
             return dictionaryFile.readLong();
-        } catch ( IOException e ) {
-            e.printStackTrace();
-            return -1;
+        } catch ( Exception e ) {
+            //e.printStackTrace();
+            return 0;
         }
     }
     
@@ -311,6 +311,11 @@ public class PersistentHashedIndex implements Index {
         }
         freader.close();
     }
+    
+    public boolean isDictionaryNull( long ptr ) {
+    	long dataPtr = readDictionary(ptr);
+    	return dataPtr==0;
+    }
 
 
     /**
@@ -329,7 +334,7 @@ public class PersistentHashedIndex implements Index {
             long hash;
             boolean col = false;
             
-            HashSet<Long> used_hashes = new HashSet<Long>();
+            //HashSet<Long> used_hashes = new HashSet<Long>();
             
             for (HashMap.Entry<String, PostingsList> item : index.entrySet()) {
                 token = item.getKey();
@@ -340,7 +345,8 @@ public class PersistentHashedIndex implements Index {
                 
                 col = false;
                 
-                while(used_hashes.contains(hash)) {
+                //while(used_hashes.contains(hash)) {
+                while(!isDictionaryNull(hash)) {
                 	hash+=8;
                 	
                 	col = true;
@@ -350,7 +356,7 @@ public class PersistentHashedIndex implements Index {
                 	collisions++;
                 }
                 
-                used_hashes.add(hash);
+                //used_hashes.add(hash);
                 writeDictionary(hash, free);
                 entry = new Entry(token, postingsList);
                 
@@ -378,7 +384,7 @@ public class PersistentHashedIndex implements Index {
     	long ptr;
     	int i = 1000;
     		
-    	while(i-- > 0) {
+    	while(!isDictionaryNull(hash)) {
     		ptr = readDictionary(hash);
     		
     		e = readEntry(ptr);

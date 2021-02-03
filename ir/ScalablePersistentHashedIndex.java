@@ -28,7 +28,7 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
 	
 	private TreeMap<String,PostingsList> index = new TreeMap<String,PostingsList>();
 	
-	public static final int LIMIT_TOKENS = 100000;//300000;
+	public static final int LIMIT_TOKENS = 100000; //300000;
 	
 	public static int tokens_inserted = 0;
 	
@@ -311,7 +311,7 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
         //System.err.print( "Writing index to disk..." );
         //writeIndex();
         System.err.println( "done!" );
-        System.err.println( "aqui cambiar el nombre del fichero a data y hacer el dictionaryfile!" );
+        //System.err.println( "aqui cambiar el nombre del fichero a data y hacer el dictionaryfile!" );
         
         
         System.err.println(dataFileCount);

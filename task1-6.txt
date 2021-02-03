@@ -30,3 +30,7 @@ Query = "courses graduate davis mathematics"
 
 PRECISION = 4/15
 RECALL = 4/100
+
+This second query gave better results than the previous one probably because when
+writing about graduate courses you mention the word "graduate" but even if it is
+valuable info you do not necessarily write the word "info".
