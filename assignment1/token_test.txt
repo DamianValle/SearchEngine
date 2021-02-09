@@ -1,0 +1,236 @@
+   Contemporary email addresses consist of a "local part" separated
+   from a "domain part" (a fully-qualified domain name) by an at-sign
+   ("@").  The syntax of the domain part corresponds to that in the
+   previous section.  The concerns identified in that section about
+   filtering and lists of names apply to the domain names used in an
+   email context as well.  The domain name can also be replaced by an
+   IP address in square brackets, but that form is strongly
+   discouraged except for testing and troubleshooting purposes.
+
+   The local part may appear using the quoting conventions described
+   below.  The quoted forms are rarely used in practice, but are
+   required for some legitimate purposes.  Hence, they should not be
+   rejected in filtering routines but, should instead be passed to the
+   email system for evaluation by the destination host.
+ 
+   The exact rules are quite complex, but we will only consider mail
+   addresses whose left part (before the '@' sign) consists of groups
+   of word characters (letters, digits and the underscore character),
+   separated by a period. For example, these are all valid e-mail
+   addresses:
+
+   nisse@kth.se
+   nisse.nisselund@csc.kth.se
+   u152749889@nisse.gov
+   jb_15@a.b.c.se
+   cell..delabadie@sbcglobal.net
+   what_ever@public.com
+
+   In addition to restrictions on syntax, there is a length limit on
+   email addresses.  That limit is a maximum of 64 characters (octets)
+   in the "local part" (before the "@") and a maximum of 255 characters
+   (octets) in the domain part (after the "@") for a total length of 320
+   characters.  Systems that handle email should be prepared to process
+   addresses which are that long, even though they are rarely
+   encountered.
+
+   The syntax for URLs (Uniform Resource Locators) is specified in
+   [RFC1738].  The syntax for the more general "URI" (Uniform Resource
+   Identifier) is specified in [RFC2396].  The URI syntax is extremely
+   general, with considerable variations permitted according to the
+   type of "scheme" (e.g., "http", "ftp", "mailto") that is being
+   used.  While it is possible to use the general syntax rules of RFC
+   2396 to perform syntax checks, they are general enough
+   --essentially only specifying the separation of the scheme name and
+   "scheme specific part" with a colon (":") and excluding some
+   characters that must be escaped if used-- to provide little
+   significant filtering or validation power.
+
+   The following characters are reserved in many URIs -- they must be
+   used for either their URI-intended purpose or must be encoded.  Some
+   particular schemes may either broaden or relax these restrictions
+   (see the following sections for URLs applicable to "web pages" and
+   electronic mail), or apply them only to particular URI component
+   parts.
+
+      ; / ? : @ & = + $ , ?
+
+   In addition, control characters, the space character, the double-
+   quote (") character, and the following special characters
+
+      < > # %
+
+   are generally forbidden and must either be avoided or escaped, as
+   discussed below.
+
+   The colon after the scheme name, and the percent sign used to escape
+   characters, are specifically reserved for those purposes, although
+   ":" may also be used elsewhere in some schemes.
+
+   When it is necessary to encode these, or other, characters, the
+   method used is to replace it with a percent-sign ("%") followed by
+   two hexidecimal digits representing its octet value.  See section
+   2.4.1 of [RFC2396] for an exact definition.  Unless it is used as a
+   delimiter of the URI scheme itself, any character may optionally be
+   encoded this way; systems that are testing URI syntax should be
+   prepared for these encodings to appear in any component of the URI
+   except the scheme name itself.
+
+   A "generic URI" syntax is specified and is more restrictive, but
+   using it to test URI strings requires that one know whether or not
+   the particular scheme in use obeys that syntax.  Consequently,
+   applications that intend to check or validate URIs should normally
+   identify the scheme name and then apply scheme-specific tests.  The
+   rules for two of those -- HTTP [RFC1738] and MAILTO [RFC2368] URLs --
+   are discussed below, but the author of an application which intends
+   to make very precise checks, or to reject particular syntax rather
+   than just warning the user, should consult the relevant scheme-
+   definition documents for precise syntax and relationships.
+
+4.2.  The HTTP URL
+
+   Absolute HTTP URLs consist of the scheme name, a host name (expressed
+   as a domain name or IP address), and optional port number, and then,
+   optionally, a path, a search part, and a fragment identifier.  These
+   are separated, respectively, by a colon and the two slashes that
+   precede the host name, a colon, a slash, a question mark, and a hash
+   mark ("#").  So we have
+
+      http://host:8000/path?search#fragment
+
+      http://host/path/
+
+      http://host/path#fragment
+
+      http://host/path?search
+
+      http://host
+
+   and other variations on that form.  There is also a "relative" form,
+   but it almost never appears in text that a user might, e.g., enter
+   into a form.  See [RFC2616] for details. 
+
+   These are all examples of valid addresses:
+
+      http://www.w3.org/hypertext/WWW/TheProject.html
+
+      http://crnvmc.cern.ch/FIND?sgml+examples
+
+      https://en.wikipedia.org/wiki/Massachusetts#History
+
+      https://en.wikipedia.org/wiki/20th_century
+
+      http://www.californiaaggie.com/news/2007/05/17/CampusNews/Give3.Seeks.To.Raise.Money.For.Relief.Development2904852.shtml
+
+      http://www.forbes.com/2010/08/01/bestbuyscollegesmoneyopinionscolleges10value.html
+
+      http://money.cnn.com/galleries/2010/moneymag/1007/gallery.best_places_rich_single.moneymag/19.html
+
+      http://caselaw.findlaw.com/data2/californiastatecases/s009141.doc
+
+      http://developers.jollypad.com/fb/index.php?dmmy=1&fb_sig_in_iframe=1&fb_sig_iframe_key=8e296a067a37563370ded05f5a3bf3ec&fb_sig_locale=bg_BG&fb_sig_in_new_facebook=1&fb_sig_time=1282749119.128&fb_sig_added=1&fb_sig_profile_update_time=1229862039&fb_sig_expires=1282755600&fb_sig_user=761405628&fb_sig_session_key=2.IuyNqrcLQaqPhjzhFiCARg__.3600.1282755600-761405628&fb_sig_ss=igFqJKrhJZWGSRO__Vpx4A__&fb_sig_cookie_sig=a9f110b4fc6a99db01d7d1eb9961fca6&fb_sig_ext_perms=user_birthday,user_religion_politics,user_relationships,user_relationship_details,user_hometown,user_location,user_likes,user_activities,user_interests,user_education_history,user_work_history,user_online_presence,user_website,user_groups,user_events,user_photos,user_videos,user_photo_video_tags,user_notes,user_about_me,user_status,friends_birthday,friends_religion_politics,friends_relationships,friends_relationship_details,friends_hometown,friends_location,friends_likes,friends_activities,friends_interests,friends_education_history,friends_work_history,friends_online_presence,friends_website,friends_groups,friends_events,friends_photos,friends_videos,friends_photo_video_tags,friends_notes,friends_about_me,friends_status&fb_sig_country=bg&fb_sig_api_key=9f7ea9498aabcd12728f8e13369a0528
+
+      http://www.example.com/#hello,%20world
+
+      http://www.example.com/foo/bar
+
+      http://www.example.com/##asdf
+
+      http://GoOgLe.CoM/
+
+      http://%30%78%63%30%2e%30%32%35%30.01/
+
+      http://www.xn--looout-5bb.net/
+
+      http://www.example.com/?%40%41123
+
+      http://www.scienceblog.com/community/older/2003/C/2003253.html
+
+      https://www.google.com/maps/place/Odengatan,+Stockholm/@59.3432976,18.0502268,17z/data=!3m1!4b1!4m5!3m4!1s0x465f9d6fac5eeb63:0x1ceb3b5f1ea5f59f!8m2!3d59.3432976!4d18.0524155
+
+      http://creativecommons.org/licenses/by/3.0/
+
+   The characters
+
+      / ; ?
+
+   are reserved within the path and search parts and must be encoded;
+   the first of these may be used unencoded, and is often used within
+   the path, to designate hierarchy.
+
+   This is a mail address: jb21@williams.edu! And this is my
+   IP-address: 192.168.255.255.
+
+   In the late 1980s and early 1990s, the NANPA implemented calling
+   procedures that required all long-distance calls within an area
+   code to be prefixed with 1 in an effort to make it possible to
+   assign central office prefixes with 0 or 1 in the middle
+   position. As it had nearly run out of area codes using the existing
+   assignment methods, it allowed the assignment of area codes of the
+   form N10, such as 210 in the San Antonio, Texas, area and 410 in
+   eastern Maryland. Therefore, someone calling from San Jose,
+   California to Los Angeles before the change would have dialed
+   213-555-0123 and after the change 1-213-555-0123, which permitted
+   the use of 213 as an exchange prefix in the San Jose area.
+
+   The country calling code for the NANP is +1. In international
+   format, an NANP number should be listed thus: +13015550100 (example
+   using the original area code for Maryland). The trunk prefix code
+   for direct-dialed long-distance in the NANP is also 1.
+
+   Each three-digit area code may contain up to 7,919,900 unique phone numbers:
+
+   NXX may begin only with the digits [2–9], providing a base of 8
+    million numbers: ( 8 x 100 x 10000 ) .  However, the last two
+    digits of NXX cannot both be 1, to avoid confusion with the N11
+    codes.[citation needed] Despite the widespread usage of NXX 555
+    for fictional telephone numbers — see 555 (telephone number) —
+    today, the only such numbers specifically reserved for fictional
+    use are 555-0100 through 555-0199, with the remaining 555 numbers
+    released for actual assignment as information numbers (subtract
+    100).  In individual geographic area codes, several other NXX
+    prefixes are generally not assigned: the home area code(s),
+    adjacent domestic area codes and overlays, area codes reserved for
+    future relief nearby, industry testing codes (generally NXX 958
+    and 959) and special service codes (such as NXX 950 and 976).
+
+   Various office codes in certain plan areas are deliberately not
+   issued, for example, numbers 212718-xxxx, where 212 and 718 are
+   both New York City area codes, are typically avoided to prevent
+   confusion between an area code and a similarly numbered local
+   exchange in the same region. 958-xxxx and 959-xxxx are usually test
+   numbers. Inserting 0 or 1 as the first digit of an area code or
+   seven-digit local number is invalid, as is a 9 as the middle digit
+   of an area code; these are trunk prefixes or reserved for North
+   American Numbering Plan expansion. Lists of exchanges in an
+   individual area code (posted by CNAC in Canada, NANP in the United
+   States) all list various prefixes as deliberately not issued.
+
+   Customer Care will be closed on July 4th for US Independence Day.
+   Order Status is available 24/7 online as well as through our
+   automated order status at 1-800-433-9014 (9 – digit order number
+   required). Here are the prices of some common services:
+   Standard query..........................................$80/hour
+   Advanced query.........................................$100/hour
+   Technician home visit................$120/hour + travel expenses
+
+   The number of really, really important numbers are 5, or perhaps
+   4. Or maybe 3: 16, 17, and 18 are England's most important
+   numbers. Hey, you're crazy -- you can't say that! Yes, I can, and
+   I'll write 'em one after the other. 
+
+   As they say on the radio: "Send us your requests, and we'll play 'em
+   for ya!"
+
+   What time is it?  It's already a quarter past six, or more exactly,
+   18:15:34, in 2016 A.D. It is A.D., isn't it? Or is it B.C.? I don't
+   recall exactly. At least it's 6.15 P.M., I'm pretty sure of that.
+
+   That's what I'd call a 'gaffe', pardon my French. How'd you
+   tokenize that?
+
+   Click here to find out get the file with more info file(How to bake a cake.ppt)
+
+   A copy of the Badminton Group Meeting Schedule as a word document may be downloaded here:File(112313.doc).
+
+   A financial report can be found in the file called The_largest_corporations_in_America.xlsx, which is on the Central server.

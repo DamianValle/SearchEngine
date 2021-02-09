@@ -1,0 +1,66 @@
+1 Math.f 0
+1 TravisTaylor.f 0
+1 Davis_Graduate.f 0
+1 Grad_Students.f 0
+1 The_Grad.f 0
+1 EfremRensi.f 0
+1 GRE.f 0
+1 JulieB.f 0
+1 EOP.f 0
+1 Mentorships_for_Undergraduate_Research_in_Agriculture%2C_Letters%2C_and_Science.f 0
+1 Wilfred.f 0
+1 Planned_Education_Leave_Program.f 0
+1 Agricultural_Chemistry.f 0
+1 JillNi.f 0
+1 DavidGeisler.f 0
+1 Bridge.f 0
+1 ESLP.f 0
+1 APILP.f 0
+1 UCDC.f 0
+1 Pharmacology_and_Toxicology.f 0
+1 Bridge_Outreach_and_Retention_Program.f 0
+1 Elaine_Kasimatis.f 1
+1 Elliott.f 0
+1 Santani.f 0
+1 JoshBurkart.f 0
+1 Free_Munchies_at_Bars.f 0
+1 SamSampson.f 0
+1 UC_Davis_Wrestling.f 0
+1 GradLink.f 0
+1 Evelyn_Silvia.f 1
+1 1927.f 0
+1 DanielHoang.f 0
+1 Graduate_Academic_Achievement_and_Advocacy_Program.f 2
+1 Society_for_Industrial_and_Applied_Mathematics.f 1
+1 East_Asian_Languages_and_Cultures.f 0
+1 30-40_Something_Grad_Students.f 0
+1 Yeni.f 0
+1 ErikStaab.f 0
+1 JamesShearer.f 0
+1 MichaelTehranian.f 0
+1 Western_Institute_for_Food_Safety_and_Security.f 0
+1 UC_Davis_Women%27s_Gymnastics.f 0
+1 SIAM.f 0
+1 Meals_on_Wheels.f 0
+1 Mathematics_ArXiv_front.f 1
+1 Kraig%21Kraft%21.f 0
+1 MotokiWu.f 0
+1 McNair_Scholars_Program.f 0
+1 ThucNghiNguyen.f 0
+1 Agricultural_%26_Environmental_Chemistry_Graduate_Group.f 0
+
+PRECISION
+@10=0/10=0
+@20=0/20=0
+@30=2/30=0.067
+@40=4/40=0.1
+@50=5/50=0.1
+
+RECALL
+@10=0/100=0
+@20=0/100=0
+@30=2/100=0.02
+@40=4/100=0.04
+@50=5/100=0.05
+
+

@@ -1,2 +1,0 @@
-FINAL QUERY = "info mathematics graduate davis"
-
