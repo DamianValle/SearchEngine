@@ -426,7 +426,53 @@ public class PersistentHashedIndex implements Index {
         System.err.println( "done!" );
     }
     
-    
+    public void loadPageRank() {
+    	try {
+    		System.err.println("Loading PageRank...");
+    		File davisTitlesFile = new File("./pagerank/davisTitles.txt");
+    		FileReader freader = new FileReader(davisTitlesFile);
+    		BufferedReader br = new BufferedReader(freader);
+    		HashMap<String,Integer> davisTitles = new HashMap<String,Integer>();
+    		
+    		String line;
+    		while ((line = br.readLine()) != null) {
+    			String[] entry = line.split(";");
+    			davisTitles.put(entry[1], Integer.parseInt(entry[0]));
+
+    		}
+    		
+    		File f = new File("./pagerank/rankDoc.txt");
+    		freader = new FileReader(f);
+    	
+    		br = new BufferedReader(freader);
+    		HashMap<Integer,Double> pageRankHash = new HashMap<Integer,Double>();
+    		
+    		while ((line = br.readLine()) != null) {
+    			String[] entry = line.split(":");
+    			pageRankHash.put(Integer.parseInt(entry[0]), Double.parseDouble(entry[1]));
+    		}
+    		freader.close();
+    		
+    		for (Map.Entry<Integer, String> entry : docNames.entrySet()) {
+    			String[] docpath = entry.getValue().split("/");
+    			docPageRank.put(entry.getKey(), pageRankHash.get(davisTitles.get(docpath[docpath.length - 1])));
+    		}
+    		
+    		
+    		davisTitles = null;
+    		pageRankHash = null;
+    		
+    		System.err.println("Loaded PageRank...");
+    		
+    		//System.err.println("File with docID 7865 has a name of " + docNames.get(7865) + " and a pagerank of " + Double.toString(docPageRank.get(7865)));
+    		
+    		
+    		
+    	} catch (Exception e) {
+    		System.err.println("ojico maño");
+    		e.printStackTrace();
+    	}
+    }
     
     
     

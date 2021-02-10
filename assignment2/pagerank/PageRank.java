@@ -230,9 +230,9 @@ public class PageRank {
 	    
 	    int[] bestK = maxKIndex(pr.ranks, 30);
 	    
-	    //for(int i : bestK) {
-	    //	System.err.println(pr.docName[i] + ":" + Double.toString(pr.ranks[i]));
-	    //}
+	    for(int i : bestK) {
+	    	System.err.println(pr.docName[i] + ":" + Double.toString(pr.ranks[i]));
+	    }
 	    
 	    for(int i=0; i<pr.ranks.length; i++) {
 	    	System.out.println(pr.docName[i] + ":" + Double.toString(pr.ranks[i]));

@@ -10,6 +10,7 @@ package ir;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.io.*;
 
 
 /**
@@ -41,6 +42,25 @@ public class HashedIndex implements Index {
      */
     public PostingsList getPostings( String token ) {
         return index.get(token);
+    }
+    
+    public void loadPageRank() {
+    	try {
+    		File f = new File("./pagerank/rankDoc.txt");
+    		FileReader freader = new FileReader(f);
+    		
+    		System.err.println("Opened file");
+    	
+    		BufferedReader br = new BufferedReader(freader);
+    		String line;
+    		while ((line = br.readLine()) != null) {
+    			String[] entry = line.split(":");
+    			docPageRank.put(Integer.parseInt(entry[0]), Double.parseDouble(entry[1]));
+    		}
+    		freader.close();
+    	} catch (Exception e) {
+    		System.err.println("ojico maño");
+    	}
     }
     
 

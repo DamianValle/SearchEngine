@@ -16,8 +16,8 @@ import java.io.File;
 public class Engine {
 
     /** The inverted index. */
-    Index index = new HashedIndex();
-    //Index index = new PersistentHashedIndex();
+    //Index index = new HashedIndex();
+    Index index = new PersistentHashedIndex();
     //Index index = new ScalablePersistentHashedIndex();
 
     /** The indexer creating the search index. */
@@ -90,6 +90,7 @@ public class Engine {
         } else {
             gui.displayInfoText( "Index is loaded from disk" );
         }
+        index.loadPageRank();
     }
 
 
