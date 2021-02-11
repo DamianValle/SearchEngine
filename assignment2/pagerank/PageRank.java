@@ -124,6 +124,25 @@ public class PageRank {
 	//System.err.println( "Read " + fileIndex + " number of documents" );
 	return fileIndex;
     }
+    
+    /* --------------------------------------------- */
+    
+    static class MC1 {
+    	
+    	public MC1(int N, int numberOfDocs, HashMap<Integer,HashMap<Integer,Boolean>> link) {
+    		this.N = N;
+    		this.numberOfDocs = numberOfDocs;
+    		this.link = link;
+    	}
+    	
+    	public double[] simulate() {
+    		double[] ranks = new double[numberOfDocs];
+    		
+    		for(int i = 0; i < N; i++) {
+    			
+    		}
+    	}
+    }
 
 
     /* --------------------------------------------- */
@@ -173,8 +192,6 @@ public class PageRank {
 		}
 		*/
 		
-		
-		
 		// Epsilon threshold checking
 		error = 0;
 		for(int i=0; i<a.length; i++) {
@@ -220,24 +237,37 @@ public class PageRank {
 
 
     public static void main( String[] args ) {
-	if ( args.length != 1 ) {
-	    System.err.println( "Please give the name of the link file" );
-	}
-	else {
-	    PageRank pr = new PageRank( args[0] );
+    	if(args.length<2 || (args.length==2 && args[1].equals("--help"))){
+    		System.out.println("usage: java -Xmx1g PageRank [link file] [options]\n"
+    				+ "\toptions:\n"
+    				+ "\t\t--help\n"
+    				+ "\t\t--print-all\n"
+    				+ "\t\t--top30\n"
+    				+ "\t\t--MC1");
+    	} else if(args.length==2 && args[1].equals("--print-all")) {
+    		PageRank pr = new PageRank( args[0] );
+    	    
+    	    for(int i=0; i<pr.ranks.length; i++) {
+    	    	System.out.println(pr.docName[i] + ":" + Double.toString(pr.ranks[i]));
+    	    }
+    	}
+    	if(args.length==2 && args[1].equals("--top30")) {
+    		PageRank pr = new PageRank( args[0] );
+    	    
+    	    int[] bestK = maxKIndex(pr.ranks, 30);
+    	    
+    	    for(int i : bestK) {
+    	    	System.err.println(pr.docName[i] + ":" + Double.toString(pr.ranks[i]));
+    	    }
+    	}
+    		
+    	if(args.length==2 && args[1].equals("--MC1")) {
+    		
+    	}
+    		
+    		
+    		
 	    
-	    int top = 30;
 	    
-	    int[] bestK = maxKIndex(pr.ranks, 30);
-	    
-	    for(int i : bestK) {
-	    	System.err.println(pr.docName[i] + ":" + Double.toString(pr.ranks[i]));
-	    }
-	    
-	    for(int i=0; i<pr.ranks.length; i++) {
-	    	System.out.println(pr.docName[i] + ":" + Double.toString(pr.ranks[i]));
-	    }
-	    
-	}
     }
 }

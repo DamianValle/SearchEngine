@@ -31,7 +31,7 @@ public class Searcher {
      *  Searches the index for postings matching the query.
      *  @return A postings list representing the result of the query.
      */
-    public PostingsList search( Query query, QueryType queryType, RankingType rankingType ) { 
+    public PostingsList search( Query query, QueryType queryType, RankingType rankingType, NormalizationType normalizationType ) { 
        
     	/**
     	Iterator<QueryTerm> iter = query.iterator();
@@ -81,7 +81,7 @@ public class Searcher {
     	} else if ( queryType == QueryType.RANKED_QUERY ) {
     		System.err.println("Selected Ranked Query");
     		
-    		return RankedSearch.search(postingsLists, index, rankingType);
+    		return RankedSearch.search(postingsLists, index, rankingType, normalizationType);
     		
     	}
     	

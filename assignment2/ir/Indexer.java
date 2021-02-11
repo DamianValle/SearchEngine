@@ -28,6 +28,8 @@ public class Indexer {
 
     /** The patterns matching non-standard words (e-mail addresses, etc.) */
     String patterns_file;
+    
+    HashMap<Integer, HashMap<String, Integer>> docTokenLengths = new HashMap<Integer, HashMap<String, Integer>>();
 
 
     /* ----------------------------------------------- */
@@ -45,7 +47,6 @@ public class Indexer {
     private int generateDocID() {
         return lastDocID++;
     }
-
 
 
     /**
@@ -72,10 +73,13 @@ public class Indexer {
                         Reader reader = new InputStreamReader( new FileInputStream(f), StandardCharsets.UTF_8 );
                         Tokenizer tok = new Tokenizer( reader, true, false, true, patterns_file );
                         int offset = 0;
+                        HashMap<String, Integer> tokenLength = new HashMap<String, Integer>();
                         while ( tok.hasMoreTokens() ) {
                             String token = tok.nextToken();
                             insertIntoIndex( docID, token, offset++ );
+                            tokenLength.merge(token, 1, (x,y) -> x+y);
                         }
+                        docTokenLengths.put(docID, tokenLength );
                         index.docNames.put( docID, f.getPath() );
                         index.docLengths.put( docID, offset );
                         reader.close();
@@ -89,6 +93,26 @@ public class Indexer {
 
 
     /* ----------------------------------------------- */
+    
+    public void calculateEuclidean() {
+    	
+    	System.err.println("Calculating Euclidean...");
+    	
+    	int N = index.docLengths.size();
+    	System.err.println("N is: " + Integer.toString(N));
+    	
+    	for (HashMap.Entry<Integer, HashMap<String, Integer>> entry : docTokenLengths.entrySet()) {
+    		double sum = 0;
+    		for(HashMap.Entry<String, Integer> tokenCountsEntry : entry.getValue().entrySet()) {
+    			int tf = tokenCountsEntry.getValue();
+    			double docf = index.getPostingsOnTheFly(tokenCountsEntry.getKey()).size();
+    			double idf = Math.log(index.docNames.size()/docf);
+    			sum += Math.pow(tf * idf, 2);
+    		}
+    		index.docLengthsEuclidean.put(entry.getKey(), Math.sqrt(sum));
+    	}
+    	System.err.println("Euclidean done.");
+    }
 
 
     /**

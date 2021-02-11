@@ -10,18 +10,47 @@ import java.util.stream.Collectors;
 
 public class RankedSearch {
 
-  public static PostingsList search(ArrayList<PostingsList> postingsLists, Index index, RankingType rankingType) {
-
-    switch (rankingType) {
-      case TF_IDF: return tfIdfRanking(postingsLists, index);
+  public static PostingsList search(ArrayList<PostingsList> postingsLists, Index index, RankingType rankingType, NormalizationType normalizationType) {
+	  
+	  double WEIGHT = 0.5;
+	  
+	  switch (rankingType) {
+      case TF_IDF: return tfIdfRanking(postingsLists, index, normalizationType);
       case PAGERANK: return pageRankRanking(postingsLists, index);
-      //case COMBINATION:
+      case COMBINATION: {
+    	  System.err.println("Combination");
+    	  PostingsList pr = pageRankRanking(postingsLists, index);
+    	  PostingsList tfidf = tfIdfRanking(postingsLists, index, normalizationType);
+    	  
+    	  normalizeScores(pr);
+    	  normalizeScores(tfidf);
+    	  
+    	  for(int i=0; i<pr.size(); i++) {
+    		  pr.get(i).setScore(pr.get(i).score * WEIGHT + tfidf.get(i).score * (1-WEIGHT));
+    	  }
+    	  
+    	  pr.sortPostings();
+    	  
+    	  return pr;
+      }
       default:
         break;
     }
 
     return null;
     
+  }
+  
+  private static void normalizeScores(PostingsList postingsList) {
+	  
+	  double sum = 0;
+	  for(int i=0; i<postingsList.size(); i++) {
+		  sum += postingsList.get(i).score;
+	  }
+	  for(int i=0; i<postingsList.size(); i++) {
+		  postingsList.get(i).setScore(postingsList.get(i).score / sum);
+	  }
+	  
   }
   
   private static PostingsList pageRankRanking(ArrayList<PostingsList> postingsLists, Index index) {
@@ -48,7 +77,7 @@ public class RankedSearch {
 	  return answer;
   }
   
-  private static PostingsList tfIdfRanking(ArrayList<PostingsList> postingsLists, Index index) {
+  private static PostingsList tfIdfRanking(ArrayList<PostingsList> postingsLists, Index index, NormalizationType normalizationType) {
   	
   	int N = index.docLengths.size();
   	
@@ -72,7 +101,8 @@ public class RankedSearch {
       		docID = postingsList.get(i).docID;
       		postingsEntry = postingsList.get(i);
       		tf = postingsEntry.offsetList.size();
-      		postingsEntry.setScore((tf * idf) / index.docLengths.get(docID));
+      		//postingsEntry.setScore((tf * idf) / index.docLengths.get(docID));
+      		postingsEntry.setScore((tf * idf) / docLength(index, docID, normalizationType));
       	}
       	
       	answer = postingsUnion(answer, postingsList);
@@ -82,6 +112,18 @@ public class RankedSearch {
   	answer.sortPostings();
   	
   	return answer;
+  }
+  
+  private static double docLength(Index index, int docID, NormalizationType nt) {
+	  switch(nt) {
+	  case NUMBER_OF_WORDS:
+		  return index.docLengths.get(docID);
+	  case EUCLIDEAN:
+		  return index.docLengthsEuclidean.get(docID);
+	  default:
+		  System.err.println("docLength error");
+		  return 0;
+	  }
   }
   
   private static PostingsList postingsUnion(PostingsList p1, PostingsList p2) {

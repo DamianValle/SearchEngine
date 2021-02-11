@@ -22,6 +22,8 @@ public interface Index {
     /** Mapping from document identifier to document length. */
     public HashMap<Integer,Integer> docLengths = new HashMap<Integer,Integer>();
     
+    public HashMap<Integer,Double> docLengthsEuclidean = new HashMap<Integer,Double>();
+    
     public HashMap<Integer, Double> docPageRank = new HashMap<Integer, Double>();
 
     /** Inserts a token into the index. */
@@ -29,11 +31,14 @@ public interface Index {
 
     /** Returns the postings for a given term. */
     public PostingsList getPostings( String token );
+    
+    public PostingsList getPostingsOnTheFly( String token );
 
     /** This method is called on exit. */
     public void cleanup();
     
     public void loadPageRank();
+    
 
 }
 

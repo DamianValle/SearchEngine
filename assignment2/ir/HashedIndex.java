@@ -44,6 +44,11 @@ public class HashedIndex implements Index {
         return index.get(token);
     }
     
+    public PostingsList getPostingsOnTheFly( String token ) {
+        return index.get(token);
+    }
+    
+    
     public void loadPageRank() {
     	try {
     		File f = new File("./pagerank/rankDoc.txt");

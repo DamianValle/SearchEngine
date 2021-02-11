@@ -285,7 +285,7 @@ public class PersistentHashedIndex implements Index {
         FileOutputStream fout = new FileOutputStream( INDEXDIR + "/docInfo", true);
         for (Map.Entry<Integer,String> entry : docNames.entrySet()) {
             Integer key = entry.getKey();
-            String docInfoEntry = key + ";" + entry.getValue() + ";" + docLengths.get(key) + "\n";
+            String docInfoEntry = key + ";" + entry.getValue() + ";" + docLengths.get(key) + ";" + docLengthsEuclidean.get(key) + "\n";
             fout.write(docInfoEntry.getBytes());
         }
         fout.close();
@@ -307,6 +307,7 @@ public class PersistentHashedIndex implements Index {
                 String[] data = line.split(";");
                 docNames.put(new Integer(data[0]), data[1]);
                 docLengths.put(new Integer(data[0]), new Integer(data[2]));
+                docLengthsEuclidean.put(new Integer(data[0]), Double.parseDouble(data[3]));
             }
         }
         freader.close();
@@ -400,6 +401,10 @@ public class PersistentHashedIndex implements Index {
     	
     	return null;
     	
+    }
+    
+    public PostingsList getPostingsOnTheFly( String token ) {
+    	return index.get(token);
     }
 
 
