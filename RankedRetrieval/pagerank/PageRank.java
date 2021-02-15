@@ -50,7 +50,6 @@ public class PageRank {
     final static double EPSILON = 0.000001;
     
     double[] ranks;
-    
 
        
     /* --------------------------------------------- */
@@ -58,7 +57,7 @@ public class PageRank {
 
     public PageRank( String filename, String algorithm, int N) {
     	int noOfDocs = readDocs( filename );
-    	//iterate( noOfDocs, 1000 );
+    	
     	if(algorithm.equals("power iteration")) {
     		iterate( noOfDocs, N );
     	} else if(algorithm.equals("MC1")){
@@ -84,7 +83,7 @@ public class PageRank {
     int readDocs( String filename ) {
 	int fileIndex = 0;
 	try {
-	    //System.err.print( "Reading file... " );
+	    System.err.print( "Reading file... " );
 	    BufferedReader in = new BufferedReader( new FileReader( filename ));
 	    String line;
 	    while ((line = in.readLine()) != null && fileIndex<MAX_NUMBER_OF_DOCS ) {
@@ -140,14 +139,12 @@ public class PageRank {
     /* --------------------------------------------- */
     
     void MC1( int noOfDocs, int N ) {
+    	
     	this.ranks = new double[noOfDocs];
 		Random rand = new Random();
 		
 		for(int i = 0; i < N; i++) {
 			int state = rand.nextInt(noOfDocs);
-			
-			//System.err.println(state);
-			//System.err.println(link.get(state));
 			
 			while(rand.nextFloat() > BORED) {
 				HashMap<Integer,Boolean> nextState = link.get(state);
@@ -158,7 +155,6 @@ public class PageRank {
 					state = rand.nextInt(noOfDocs);
 				}
 			}
-			//System.err.println("sumando co");
 			this.ranks[state] += 1.0 / N;
 		}
 		
@@ -186,14 +182,13 @@ public class PageRank {
 				}
 				this.ranks[state] += 1.0 / (m * noOfDocs);
 			}
-			
-			
 		}
     }
     
     void MC4( int noOfDocs, int N ) {
     	this.ranks = new double[noOfDocs];
     	int m = N / noOfDocs;
+    	m = 500;
     	int state = -1;
     	int visits = 0;
 		Random rand = new Random();
@@ -248,21 +243,14 @@ public class PageRank {
 		}
     }
     
-    static double compareTop30(PageRank pr, int[] bestK, String[] top30exact, double[] top30ranks) {
+    static double compareTop30(PageRank pr, String[] top30exact, double[] top30ranks) {
     	double mse = 0;
     	int top30count = 0;
-    	for(int i : bestK) {
-    		if(pr.docName[i].equals(top30exact[top30count])) {
-    			//System.out.println("Match in " + pr.docName[i]);
-    			mse += Math.pow(top30ranks[top30count] - pr.ranks[i], 2);
-    		} else {
-    			//System.err.println("Fallico");
-    			return -1;
-    		}
+    	for(int i=0; i<top30ranks.length; i++) {
     		
-    		top30count++;
+    		mse += Math.pow(top30ranks[i] - pr.ranks[pr.docNumber.get(top30exact[i])], 2);
+    		
     	}
-    	//System.err.println("MSE: " + Double.toString(mse));
     	return mse;
     }
     
@@ -292,8 +280,8 @@ public class PageRank {
 	while( !converged && iterations++ < maxIterations ) {
 		
 		if(iterations%1000==0) {
-			//System.err.println(Integer.toString(iterations) + "\t iterations...");
-			//System.err.println(Double.toString(error) + "\t error.");
+			System.err.println(Integer.toString(iterations) + "\t iterations...");
+			System.err.println(Double.toString(error) + "\t error.");
 		}
 		
 		double[] a = new double[numberOfDocs];
@@ -325,7 +313,7 @@ public class PageRank {
 		this.ranks = a;
 		
 		if(error < EPSILON) {
-			//System.err.println("Power iteration converged at iteration " + Integer.toString(iterations));
+			System.err.println("Power iteration converged at iteration " + Integer.toString(iterations));
 			sum = Arrays.stream(a).sum(); //poner a embede ranks?
 	        for (int i = 0; i < ranks.length; i++) {
 	          ranks[i] = this.ranks[i]/sum;
@@ -410,7 +398,7 @@ public class PageRank {
     	}
     	
     	if(args.length==2 && args[1].equals("--MC5")) {
-    		PageRank pr = new PageRank( args[0], "MC5", 1000000);
+    		PageRank pr = new PageRank( args[0], "MC5", 10000000);
     		int[] bestK = maxKIndex(pr.ranks, 30);
     		for(int i : bestK) {
     	    	System.out.println(pr.docName[i] + ":" + Double.toString(pr.ranks[i]));
@@ -446,7 +434,7 @@ public class PageRank {
     		
     		PageRank pr = new PageRank( args[0], "power iteration", 1000);
     		int[] bestK = maxKIndex(pr.ranks, 30);
-    		mse = compareTop30(pr, bestK, top30exact, top30ranks);
+    		mse = compareTop30(pr, top30exact, top30ranks);
     		System.out.println("MSE: " + Double.toString(mse));
     		
     		System.out.println();
@@ -455,13 +443,13 @@ public class PageRank {
     		
     		System.out.println("---------------MC1----------------");
     		
-    		int[] its = new int[] {100000, 1000000, 10000000, 100000000};
+    		int[] its = new int[] {1000000, 10000000, 100000000};
     		for(int iterations : its) {
     			System.out.println("N:" + Integer.toString(iterations));
         		
         		pr = new PageRank( args[0], "MC1", iterations);
         		bestK = maxKIndex(pr.ranks, 30);
-        		mse = compareTop30(pr, bestK, top30exact, top30ranks);
+        		mse = compareTop30(pr, top30exact, top30ranks);
         		if( mse >= 0) {
         			System.out.println("\tMSE: " + Double.toString(mse));
         		} else {
@@ -477,7 +465,7 @@ public class PageRank {
         		
         		pr = new PageRank( args[0], "MC2", iterations);
         		bestK = maxKIndex(pr.ranks, 30);
-        		mse = compareTop30(pr, bestK, top30exact, top30ranks);
+        		mse = compareTop30(pr, top30exact, top30ranks);
         		if( mse >= 0) {
         			System.out.println("\tMSE: " + Double.toString(mse));
         		} else {
@@ -493,7 +481,7 @@ public class PageRank {
         		
         		pr = new PageRank( args[0], "MC4", iterations);
         		bestK = maxKIndex(pr.ranks, 30);
-        		mse = compareTop30(pr, bestK, top30exact, top30ranks);
+        		mse = compareTop30(pr, top30exact, top30ranks);
         		if( mse >= 0) {
         			System.out.println("\tMSE: " + Double.toString(mse));
         		} else {
@@ -509,7 +497,7 @@ public class PageRank {
         		
         		pr = new PageRank( args[0], "MC5", iterations);
         		bestK = maxKIndex(pr.ranks, 30);
-        		mse = compareTop30(pr, bestK, top30exact, top30ranks);
+        		mse = compareTop30(pr, top30exact, top30ranks);
         		if( mse >= 0) {
         			System.out.println("\tMSE: " + Double.toString(mse));
         		} else {
@@ -520,7 +508,32 @@ public class PageRank {
     		
     	}
     		
+    	if(args.length==2 && args[1].equals("--sw-wiki")) {
+    		int N = 10000;
+    		int[] prevK = new int[30];
+    		int[] bestK;
+    		boolean coverged = false;
+    		PageRank pr;
+    		while(true) {
+    			pr = new PageRank( args[0], "MC2", 100000);
+    			
+        		bestK = maxKIndex(pr.ranks, 30);
+        		
+        		if(Arrays.equals(bestK, prevK)){
+        			System.err.println("Top 30 has converged.");
+        			break;
+        		}
+        		
+        		for(int i : bestK) {
+        	    	System.out.println(pr.docName[i] + ":" + Double.toString(pr.ranks[i]));
+        	    }
+    			
+        		prevK = bestK;
+    			N *= 10;
+    			System.err.println(N);
+    		}
     		
+    	}	
     		
 	    
 	    

@@ -12,5 +12,5 @@ package ir;
  *  the course. 
  */
 public enum RankingType {
-    TF_IDF, PAGERANK, COMBINATION
+    TF_IDF, PAGERANK, COMBINATION, HITS
 }
