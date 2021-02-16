@@ -183,7 +183,12 @@ public class HITSRanker {
     	
     	for ( int i=0; i<titles.length; i++ ) {
     		
-    		titleIds[i] = titleToId.get(titles[i]);
+    		try {
+    			titleIds[i] = titleToId.get(titles[i]);
+    		} catch (Exception e) {
+    			//System.err.println(titles[i]);
+    		}
+    		
     		
     	}
     	
@@ -302,8 +307,13 @@ public class HITSRanker {
     	
     	for(int i=0; i<postingsList.size(); i++) {
     		String[] split = index.docNames.get(postingsList.get(i).docID).split("/");
-    		int id = titleToId.get(split[split.length-1]);
-    		postingsList.get(i).setScore(this.hubs.get(id) + this.authorities.get(id));
+    		if(split[split.length-1].equals("Z-World.html") || split[split.length-1].equals("Z-World.txt")) {
+    			postingsList.get(i).setScore(0);
+    		} else {
+    			int id = titleToId.get(split[split.length-1]);
+        		postingsList.get(i).setScore(this.hubs.get(id) + this.authorities.get(id));
+    		}
+    		
 		}
     	
         return postingsList;
