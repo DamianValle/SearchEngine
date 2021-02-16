@@ -50,7 +50,6 @@ public class PageRank {
     final static double EPSILON = 0.000001;
     
     double[] ranks;
-
        
     /* --------------------------------------------- */
 
@@ -83,7 +82,7 @@ public class PageRank {
     int readDocs( String filename ) {
 	int fileIndex = 0;
 	try {
-	    System.err.print( "Reading file... " );
+	    //System.err.print( "Reading file... " );
 	    BufferedReader in = new BufferedReader( new FileReader( filename ));
 	    String line;
 	    while ((line = in.readLine()) != null && fileIndex<MAX_NUMBER_OF_DOCS ) {
@@ -349,13 +348,16 @@ public class PageRank {
 
 
     public static void main( String[] args ) {
+    	
     	if(args.length<2 || (args.length==2 && args[1].equals("--help"))){
     		System.out.println("usage: java -Xmx1g PageRank [link file] [options]\n"
     				+ "\toptions:\n"
     				+ "\t\t--help\n"
     				+ "\t\t--print-all\n"
     				+ "\t\t--top30\n"
-    				+ "\t\t--MC1 --MC2 --MC4 --MC5");
+    				+ "\t\t--MC1 --MC2 --MC4 --MC5\n"
+    				+ "\t\t--sw-wiki");
+    				
     	} else if(args.length==2 && args[1].equals("--print-all")) {
     		PageRank pr = new PageRank( args[0] , "power iteration", 1000);
     	    
@@ -398,7 +400,7 @@ public class PageRank {
     	}
     	
     	if(args.length==2 && args[1].equals("--MC5")) {
-    		PageRank pr = new PageRank( args[0], "MC5", 10000000);
+    		PageRank pr = new PageRank( args[0], "MC5", 1000000);
     		int[] bestK = maxKIndex(pr.ranks, 30);
     		for(int i : bestK) {
     	    	System.out.println(pr.docName[i] + ":" + Double.toString(pr.ranks[i]));
@@ -439,11 +441,10 @@ public class PageRank {
     		
     		System.out.println();
     		
-    		
-    		
     		System.out.println("---------------MC1----------------");
     		
-    		int[] its = new int[] {1000000, 10000000, 100000000};
+    		int[] its = new int[] {5000, 10000, 100000, 500000, 1000000, 5000000, 10000000};
+    		
     		for(int iterations : its) {
     			System.out.println("N:" + Integer.toString(iterations));
         		
@@ -508,14 +509,16 @@ public class PageRank {
     		
     	}
     		
-    	if(args.length==2 && args[1].equals("--sw-wiki")) {
-    		int N = 10000;
+    	if(args.length==2 && args[1].equals("--sw-wiki-stable")) {
+    		int N = 100000;
     		int[] prevK = new int[30];
     		int[] bestK;
     		boolean coverged = false;
     		PageRank pr;
     		while(true) {
-    			pr = new PageRank( args[0], "MC2", 100000);
+    			System.err.println("Calculating for N=" + N);
+    			
+    			pr = new PageRank( args[0], "MC1", N);
     			
         		bestK = maxKIndex(pr.ranks, 30);
         		
@@ -530,10 +533,26 @@ public class PageRank {
     			
         		prevK = bestK;
     			N *= 10;
-    			System.err.println(N);
     		}
     		
-    	}	
+    	}
+    	
+    	if(args.length==2 && args[1].equals("--sw-wiki")) {
+    		int[] bestK;
+    		PageRank pr;
+    		
+    		System.err.println("Running simulation...");
+			
+			pr = new PageRank( args[0], "MC1", 960000*2);
+			
+    		bestK = maxKIndex(pr.ranks, 30);
+    		
+    		for(int i : bestK) {
+    	    	System.out.println(pr.docName[i] + ":" + Double.toString(pr.ranks[i]));
+    	    }
+    			
+    		
+    	}
     		
 	    
 	    

@@ -167,8 +167,6 @@ public class HITSRanker {
     	
     	this.linkedBy = linkedBy;
     	this.linksTo = linksTo;
-    	
-    	
     }
 
     /**
@@ -212,9 +210,9 @@ public class HITSRanker {
     	    base.addAll(base_part);
     	}
     	
-    	System.err.println(root.length);
-    	System.err.println(base.size());
-    	System.err.println("\n\n\n");
+    	//System.err.println(root.length);
+    	//System.err.println(base.size());
+    	//System.err.println("\n\n\n");
     	
     	for (int base_node : base) {
     		this.hubs.put(base_node, 1.0);
@@ -229,36 +227,12 @@ public class HITSRanker {
         	HashMap<Integer, Double> tempHubs = new HashMap<Integer, Double>();
     	    HashMap<Integer, Double> tempAuthorities = new HashMap<Integer, Double>();
     	    
-    	    /**
-    	    for( int base_node : base) {
-    	    	
-    	    	auth_score = 0.0;
-    	    	hub_score = 0.0;
-    	    	
-    	    	if(linksTo.containsKey(base_node)){
-    	    		for(int links_to : linksTo.get(base_node)) {
-        	    		hub_score += this.hubs.get(links_to);
-        	    	}
-    	    	}
-    	    	
-    	    	if(linkedBy.containsKey(base_node)) {
-    	    		for(int link_by : linkedBy.get(base_node)) {
-        	    		auth_score += this.authorities.get(link_by);
-        	    	}
-    	    	}
-    	    	
-    	    	tempHubs.put(base_node, hub_score);
-    	    	tempAuthorities.put(base_node, auth_score);
-    	    	
-    	    }
-    	    */
-    	    
     	    base.forEach(authority -> tempAuthorities.put(authority,
     	            linkedBy.getOrDefault(authority, new HashSet<>()).stream().mapToDouble(id -> this.hubs.getOrDefault(id, 0.0)).sum()));
 
     	    base.forEach(hub -> tempHubs.put(hub,
     	            linksTo.getOrDefault(hub, new HashSet<>()).stream().mapToDouble(id->tempAuthorities.getOrDefault(id, 0.0)).sum()));
-    	    	
+    	    
     	    double authSum = Math.sqrt(tempAuthorities.values().stream().map(v -> Math.pow(v, 2)).reduce(0.0, Double::sum));
     	    double hubSum = Math.sqrt(tempHubs.values().stream().map(v -> Math.pow(v, 2)).reduce(0.0, Double::sum));
 

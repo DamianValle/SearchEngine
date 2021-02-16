@@ -52,7 +52,11 @@ public class RankedSearch {
 		  answer = postingsUnion(answer, postingsList);
 	  }
 	  
-	  return hitsRanker.rank(answer);
+	  PostingsList hitsPostings = hitsRanker.rank(answer);
+	  
+	  hitsPostings.sortPostings();
+	  
+	  return hitsPostings;
   }
   
   private static void normalizeScores(PostingsList postingsList) {
