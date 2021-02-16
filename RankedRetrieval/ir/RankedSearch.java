@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 
 public class RankedSearch {
 
-  public static PostingsList search(ArrayList<PostingsList> postingsLists, Index index, RankingType rankingType, NormalizationType normalizationType) {
+  public static PostingsList search(ArrayList<PostingsList> postingsLists, Index index, RankingType rankingType, NormalizationType normalizationType, HITSRanker hitsRanker) {
 	  
 	  double WEIGHT = 0.5;
 	  
@@ -33,12 +33,26 @@ public class RankedSearch {
     	  
     	  return pr;
       }
+      case HITS: return hitsRanking(postingsLists, index, hitsRanker);
       default:
         break;
     }
 
     return null;
     
+  }
+  
+  private static PostingsList hitsRanking(ArrayList<PostingsList> postingsLists, Index index, HITSRanker hitsRanker) {
+	  
+	  int docID;
+	  PostingsEntry postingsEntry;
+	  PostingsList answer = new PostingsList();
+	  
+	  for(PostingsList postingsList : postingsLists) {
+		  answer = postingsUnion(answer, postingsList);
+	  }
+	  
+	  return hitsRanker.rank(answer);
   }
   
   private static void normalizeScores(PostingsList postingsList) {
@@ -92,10 +106,9 @@ public class RankedSearch {
       	
       	idf = Math.log((double)N / postingsList.size());
       	
-      	System.err.println(idf);
       	
-      	System.err.println("El termino  aparece en " + Integer.toString(postingsList.size()) + 
-      			" de un total de documentos N=" + Double.toString(N));
+      	//System.err.println("El termino  aparece en " + Integer.toString(postingsList.size()) + 
+      	//		" de un total de documentos N=" + Double.toString(N));
       	
       	for(int i=0; i<postingsList.size(); i++) {
       		docID = postingsList.get(i).docID;

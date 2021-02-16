@@ -21,10 +21,13 @@ public class Searcher {
     /** The k-gram index to be searched by this Searcher */
     KGramIndex kgIndex;
     
+    HITSRanker hitsRanker;
+    
     /** Constructor */
-    public Searcher( Index index, KGramIndex kgIndex ) {
+    public Searcher( Index index, KGramIndex kgIndex, HITSRanker hitsRanker) {
         this.index = index;
         this.kgIndex = kgIndex;
+        this.hitsRanker = hitsRanker;
     }
 
     /**
@@ -79,9 +82,9 @@ public class Searcher {
     		
     		
     	} else if ( queryType == QueryType.RANKED_QUERY ) {
-    		System.err.println("Selected Ranked Query");
+    		//System.err.println("Selected Ranked Query");
     		
-    		return RankedSearch.search(postingsLists, index, rankingType, normalizationType);
+    		return RankedSearch.search(postingsLists, index, rankingType, normalizationType, hitsRanker);
     		
     	}
     	

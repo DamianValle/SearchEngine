@@ -63,8 +63,11 @@ public class Engine {
      */
     public Engine( String[] args ) {
         decodeArgs( args );
+        
+        HITSRanker hitsRanker = new HITSRanker("pagerank/linksDavis.txt", "pagerank/davisTitles.txt", index);
+        
         indexer = new Indexer( index, kgIndex, patterns_file );
-        searcher = new Searcher( index, kgIndex );
+        searcher = new Searcher( index, kgIndex, hitsRanker );
         gui = new SearchGUI( this );
         gui.init();
         /* 

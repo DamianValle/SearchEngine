@@ -182,7 +182,9 @@ public class HITSRanker {
     	int[] titleIds = new int[titles.length];
     	
     	for ( int i=0; i<titles.length; i++ ) {
+    		
     		titleIds[i] = titleToId.get(titles[i]);
+    		
     	}
     	
     	iterate(titleIds);
@@ -269,10 +271,10 @@ public class HITSRanker {
 	        this.hubs = tempHubs;
 	        this.authorities = tempAuthorities;
 	        
-	        System.err.println(hubError);
+	        //System.err.println(hubError);
 	        
 	        if(hubError < EPSILON && authError < EPSILON) {
-	        	System.err.println("Converged!!!");
+	        	//System.err.println("Converged!!!");
 	        	break;
 	        }
     	}
@@ -287,13 +289,25 @@ public class HITSRanker {
      *
      * @return     A list of postings ranked according to the hub and authority scores.
      */
-    PostingsList rank(PostingsList post) {
-        //
-        // YOUR CODE HERE
-        //
-        return null;
+    PostingsList rank(PostingsList postingsList) {
+    	
+    	ArrayList<String> docIDs = new ArrayList<String>();
+    	
+    	for(int i=0; i<postingsList.size(); i++) {
+    		String[] split = index.docNames.get(postingsList.get(i).docID).split("/");
+			docIDs.add(split[split.length-1]);
+		}
+    	
+    	iterate(docIDs.toArray(new String[0]));
+    	
+    	for(int i=0; i<postingsList.size(); i++) {
+    		String[] split = index.docNames.get(postingsList.get(i).docID).split("/");
+    		int id = titleToId.get(split[split.length-1]);
+    		postingsList.get(i).setScore(this.hubs.get(id) + this.authorities.get(id));
+		}
+    	
+        return postingsList;
     }
-
 
     /**
      * Sort a hash map by values in the descending order

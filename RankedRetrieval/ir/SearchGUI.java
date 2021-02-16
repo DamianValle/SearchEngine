@@ -270,7 +270,7 @@ public class SearchGUI extends JFrame {
                 rankingType = RankingType.HITS;
             }
             };
-        combinationItem.addActionListener( setHitsRanking );
+        hitsItem.addActionListener( setHitsRanking );
 
         Action setNumberOfWordsNormalization = new AbstractAction() {
             public void actionPerformed( ActionEvent e ) {
