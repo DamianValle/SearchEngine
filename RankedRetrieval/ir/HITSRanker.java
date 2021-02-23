@@ -210,10 +210,6 @@ public class HITSRanker {
     	    base.addAll(base_part);
     	}
     	
-    	//System.err.println(root.length);
-    	//System.err.println(base.size());
-    	//System.err.println("\n\n\n");
-    	
     	for (int base_node : base) {
     		this.hubs.put(base_node, 1.0);
     		this.authorities.put(base_node, 1.0);

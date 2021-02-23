@@ -292,16 +292,6 @@ public class PageRank {
 	        });
 	      });
 		
-		/**
-		// Distribution normalization
-		double error = 0;
-		for(int i=0; i<a.length; i++) {
-			error += a[i];
-		}
-		for(int i=0; i<a.length; i++) {
-			a[i] += a[i]/error;
-		}
-		*/
 		
 		// Epsilon threshold checking
 		error = 0;
@@ -543,7 +533,7 @@ public class PageRank {
     		
     		System.err.println("Running simulation...");
 			
-			pr = new PageRank( args[0], "MC1", 960000*2);
+			pr = new PageRank( args[0], "MC5", 960000*2);
 			
     		bestK = maxKIndex(pr.ranks, 30);
     		
