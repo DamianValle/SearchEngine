@@ -82,7 +82,7 @@ public class PageRank {
     int readDocs( String filename ) {
 	int fileIndex = 0;
 	try {
-	    //System.err.print( "Reading file... " );
+	    System.err.print( "Reading file... " );
 	    BufferedReader in = new BufferedReader( new FileReader( filename ));
 	    String line;
 	    while ((line = in.readLine()) != null && fileIndex<MAX_NUMBER_OF_DOCS ) {
@@ -122,7 +122,7 @@ public class PageRank {
 		System.err.print( "stopped reading since documents table is full. " );
 	    }
 	    else {
-		//System.err.print( "done." );
+		System.err.print( "done." );
 	    }
 	}
 	catch ( FileNotFoundException e ) {
@@ -131,7 +131,7 @@ public class PageRank {
 	catch ( IOException e ) {
 	    System.err.println( "Error reading file " + filename );
 	}
-	//System.err.println( "Read " + fileIndex + " number of documents" );
+	System.err.println( "Read " + fileIndex + " number of documents" );
 	return fileIndex;
     }
     
@@ -540,22 +540,6 @@ public class PageRank {
     		for(int i : bestK) {
     	    	System.out.println(pr.docName[i] + ":" + Double.toString(pr.ranks[i]));
     	    }
-    			
-    		
     	}
-    		
-	    
-	    
     }
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
 }
