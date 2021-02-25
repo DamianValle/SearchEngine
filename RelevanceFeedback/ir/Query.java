@@ -137,6 +137,10 @@ public class Query {
     	 * 
     	 */
     	
+    	if(results==null) {
+    		return;
+    	}
+    	
     	int n_relevant = 0;
     	
     	for (boolean b : docIsRelevant) {
@@ -145,12 +149,15 @@ public class Query {
     		}
     	}
     	
-    	if(results.size() != docIsRelevant.length) {
-    		System.err.println("Show all results.");
-    		return;
-    	}
+    	//if(results.size() != docIsRelevant.length) {
+    	//	System.err.println("Show all results.");
+    	//	return;
+    	//}
     	
-    	for (int i=0; i<results.size(); i++) {
+    	System.err.println("Results size: " + Integer.toString(results.size()));
+    	System.err.println("docisrelevant size: " + Integer.toString(docIsRelevant.length));
+    	
+    	for (int i=0; i<docIsRelevant.length; i++) {
     		if(docIsRelevant[i]) {
     			String pathname = engine.index.docNames.get(results.get(i).docID);
     			processFile(pathname, engine, n_relevant);
@@ -167,11 +174,8 @@ public class Query {
     		this.queryterm.add(new QueryTerm(entry.getKey(), entry.getValue()));
     	}
     	
-    	for ( QueryTerm qt : this.queryterm) {
-    		System.err.println(qt.term + ": " + Double.toString(qt.weight));
-    	}
     	
-        System.err.println("relevance done.");
+        //System.err.println("Relevance done.");
         
     }
     
@@ -186,7 +190,7 @@ public class Query {
                 tokenLength.merge(token, 1.0, (x,y) -> x+y);
             }
             for (Map.Entry<String, Double> entry : tokenLength.entrySet()) {
-            	System.err.println(entry.getKey() + ": " + Double.toString(entry.getValue() * beta / n_relevant));
+            	//System.err.println(entry.getKey() + ": " + Double.toString(entry.getValue() * beta / n_relevant));
                 query_count.put(entry.getKey(), entry.getValue() * beta / n_relevant);
             }
             reader.close();

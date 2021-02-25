@@ -78,10 +78,12 @@ public class Indexer {
                             String token = tok.nextToken();
                             insertIntoIndex( docID, token, offset++ );
                             tokenLength.merge(token, 1, (x,y) -> x+y);
+                            kgIndex.insert(token);
                         }
                         docTokenLengths.put(docID, tokenLength );
                         index.docNames.put( docID, f.getPath() );
                         index.docLengths.put( docID, offset );
+                        
                         reader.close();
                     } catch ( IOException e ) {
                         System.err.println( "Warning: IOException during indexing." );

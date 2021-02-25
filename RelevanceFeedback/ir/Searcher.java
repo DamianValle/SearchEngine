@@ -34,37 +34,42 @@ public class Searcher {
      *  Searches the index for postings matching the query.
      *  @return A postings list representing the result of the query.
      */
-    public PostingsList search( Query query, QueryType queryType, RankingType rankingType, NormalizationType normalizationType ) { 
-       
-    	/**
-    	Iterator<QueryTerm> iter = query.iterator();
-    	
-    	while(iter.hasNext()) {
-    		System.err.println(iter.next().getTerm());
-    	}
-    	
-    	*/
+    public PostingsList search( Query query, QueryType queryType, RankingType rankingType, NormalizationType normalizationType ) {
     	
     	ArrayList<String> queries = query.getQueryTerms();
-    	
     	ArrayList<PostingsList> postingsLists = new ArrayList<PostingsList>();
+    	ArrayList<PostingsList> postingsWildcarded = new ArrayList<PostingsList>();
+    	PostingsList p = new PostingsList();
     	
     	for(String queryterm : queries) {
-    		//System.err.println("Added " + queryterm + " to the query postings list.");
-    		PostingsList p = index.getPostings(queryterm);
-    		p.weight = query.query_count.getOrDefault(queryterm, 1.0);
-    		System.err.println(queryterm + ": " + Double.toString(p.weight));
+    		
+    		if(queryterm.contains("*")) {
+    			System.err.println("Tenemos un * chavales");
+    			List<String> list = kgIndex.getWildcardPostings(queryterm);
+    			for(String s : list) {
+    				System.err.println("Adding postingsList for " + s + " with size: " + Integer.toString(index.getPostings(s).size()));
+    				postingsWildcarded.add(index.getPostings(s));
+    			}
+    			p = postingsUnion(postingsWildcarded);
+    		} else {
+    			p = index.getPostings(queryterm);
+    		}
+    		
+    		if(p != null) {
+    			p.weight = query.query_count.getOrDefault(queryterm, 1.0);
+    		}
+    		
         	postingsLists.add(p);
     	}
     	
+    	System.err.println("FINAL SIZE: " + Integer.toString(postingsLists.get(0).size()));
+    	
     	
     	if( queryType == QueryType.INTERSECTION_QUERY ) {
-    		//System.err.println("Selected Intersection Query");
+    		System.err.println("Selected Intersection Query");
     		
     		if(postingsLists.size() == 1) {
-    			//System.err.println("query of size 1");
-    			//return index.getPostings(token);
-    			return index.getPostings(queries.get(0));
+    			return postingsLists.get(0);
     		} else if (postingsLists.size() > 1){
     			//System.err.println("Intersection Mode");
     			return postingsIntersection(postingsLists);
@@ -76,12 +81,11 @@ public class Searcher {
     		
     		if(postingsLists.size() == 1) {
     			//System.err.println("Query of size 1");
-    			return index.getPostings(queries.get(0));
+    			return postingsLists.get(0);
     		} else if (postingsLists.size() > 1){
     			//System.err.println("Selected Phrase Query");
         		return postingsPhrase(postingsLists);
     		}
-    		
     		
     	} else if ( queryType == QueryType.RANKED_QUERY ) {
     		//System.err.println("Selected Ranked Query");
@@ -216,6 +220,11 @@ public class Searcher {
     
     private PostingsList postingsPhrase(ArrayList<PostingsList> postingsLists) {
     	
+    	System.err.println("PostingsPhrase");
+    	System.err.println(postingsLists.size());
+    	System.err.println(postingsLists.get(0).size());
+    	System.err.println(postingsLists.get(1).size());
+    	
     	PostingsList answer;
     	
     	Iterator<PostingsList> iter = postingsLists.iterator();
@@ -300,10 +309,91 @@ public class Searcher {
     		
     	} while( iter.hasNext() ); // Used do while because the 2 long query wouldnt execute otherwise.
     	
+    	System.err.println("Postings phrase size: " + Integer.toString(answer.size()));
+    	
     	return answer;
     }
     
+    public PostingsList postingsUnion(ArrayList<PostingsList> postingsLists) {
+    	
+    	System.err.println("Executing union of size: " + Integer.toString(postingsLists.size()));
+    	
+    	if ( postingsLists.size() == 1 ) {
+    		return postingsLists.get(0);
+    	}
+    	
+    	PostingsList answer = postingsLists.get(0);
+    	
+    	int idx = 1;
+    	
+    	while(idx < postingsLists.size()) {
+    		answer = mergePostingsLists(answer, postingsLists.get(idx++));
+    	}
+    	
+    	
+    	
+    	return answer;
+    	
+    }
     
+    public PostingsList mergePostingsLists(PostingsList p1, PostingsList p2) {
+    	
+    	System.err.println("Merging postingsLists...");
+		
+    	PostingsList answer = new PostingsList();
+    	
+    	int p1_idx = 0;
+    	int p2_idx = 0;
+    	
+    	PostingsEntry postingsEntry1, postingsEntry2;
+    	ArrayList<Integer> offsets;
+    	
+    	while(p1_idx < p1.size() && p2_idx < p2.size()) {
+    		
+    		postingsEntry1 = p1.get(p1_idx);
+    		postingsEntry2 = p2.get(p2_idx);
+    		
+    		if(postingsEntry1.docID == postingsEntry2.docID) {
+    			
+    			offsets = mergeOffsets(postingsEntry1.offsetList, postingsEntry2.offsetList);
+    			answer.add(new PostingsEntry(postingsEntry1.docID, offsets));
+    			
+    			p1_idx++;
+    			p2_idx++;
+    			
+    		} else if (postingsEntry1.docID < postingsEntry2.docID) {
+    			answer.add(postingsEntry1);
+    			p1_idx++;
+    		} else {
+    			answer.add(postingsEntry2);
+    			p2_idx++;
+    		}
+    	}
+    	
+    	if(p1_idx < p1.size()) {
+    		for(int i=p1_idx; i<p1.size(); i++) {
+    			answer.add(p1.get(i));
+    		}
+    	}
+    	
+    	if (p2_idx < p2.size()) {
+    		for(int i=p2_idx; i<p2.size(); i++) {
+    			answer.add(p2.get(i));
+    		}
+    	}
+    	
+    	System.err.println("Answer of size: " + Integer.toString(answer.size()));
+    	
+    	return answer;
+	}
+    
+    public ArrayList<Integer> mergeOffsets(ArrayList<Integer> offsets1, ArrayList<Integer> offsets2) {
+		HashSet<Integer> hashset = new HashSet<>();
+		hashset.addAll(offsets1);
+		hashset.addAll(offsets2);
+		
+		return new ArrayList<>(hashset);
+	}
     
     
     

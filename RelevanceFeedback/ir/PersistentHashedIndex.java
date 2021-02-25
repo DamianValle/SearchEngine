@@ -426,8 +426,8 @@ public class PersistentHashedIndex implements Index {
      */
     public void cleanup() {
         System.err.println( index.keySet().size() + " unique words" );
-        System.err.print( "Writing index to disk..." );
-        writeIndex();
+        //System.err.print( "Writing index to disk..." );
+        //writeIndex();
         System.err.println( "done!" );
     }
     

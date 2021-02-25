@@ -24,7 +24,7 @@ public class Engine {
     Indexer indexer;
 
     /** K-gram index */
-    KGramIndex kgIndex;
+    KGramIndex kgIndex = new KGramIndex(2);
 
     /** The searcher used to search the index. */
     Searcher searcher;
@@ -88,6 +88,11 @@ public class Engine {
                 }
                 long elapsedTime = System.currentTimeMillis() - startTime;
                 gui.displayInfoText( String.format( "Indexing done in %.1f seconds.", elapsedTime/1000.0 ));
+                
+
+                //kgIndex.printKGrams("ve");
+                //System.err.println("\n\n\n");
+                //kgIndex.printKGrams("th he");
                 
                 indexer.calculateEuclidean();
                 

@@ -8,6 +8,10 @@
 package ir;
 
 import java.io.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.Collectors;
 import java.util.*;
 import java.nio.charset.StandardCharsets;
 
@@ -27,7 +31,7 @@ public class KGramIndex {
     int lastTermID = -1;
 
     /** Number of symbols to form a K-gram */
-    int K = 3;
+    int K = 2;
 
     public KGramIndex(int k) {
         K = k;
@@ -52,17 +56,35 @@ public class KGramIndex {
      */
     private List<KGramPostingsEntry> intersect(List<KGramPostingsEntry> p1, List<KGramPostingsEntry> p2) {
     	
+    	if (p1 == null || p2 == null) {
+    		return null;
+    	}
+    	
     	int ptr1 = 0;
     	int ptr2 = 0;
     	
     	List<KGramPostingsEntry> list = new ArrayList<KGramPostingsEntry>();
+    	
+    	KGramPostingsEntry kgram1, kgram2;
 
     	while ( ptr1 < p1.size() && ptr2 < p2.size()) {
+    		kgram1 = p1.get(ptr1);
+    		kgram2 = p2.get(ptr2);
     		
+    		if( kgram1.tokenID == kgram2.tokenID ) {
+    			list.add(kgram1);
+    			ptr1++;
+    			ptr2++;
+    		} else if( kgram1.tokenID < kgram2.tokenID ) {
+    			ptr1++;
+    		} else {
+    			ptr2++;
+    		}
     	}
     	
     	return list;
     }
+    
 
 
     /** Inserts all k-grams from a token into the index. */
@@ -75,21 +97,55 @@ public class KGramIndex {
     	int id = generateTermID();
     	term2id.put(token, id);
     	id2term.put(id, token);
-    	
-    	List<KGramPostingsEntry> kgramList = new List<KGramPostingsEntry>();
         
         String regex = "^" + token + "$";
+        
         for (int i=0; i < token.length() + 3 - K; i++) {
-            index.put(regex.substring(i, i+K), new KGramPostingsEntry(id));
+        	List<KGramPostingsEntry> kgramList = index.getOrDefault(regex.substring(i, i+K), new ArrayList<KGramPostingsEntry>());
+        	if(kgramList.size() == 0) {
+        		KGramPostingsEntry kgramPE = new KGramPostingsEntry(id);
+            	kgramList.add(kgramPE);
+        	} else {
+        		if(kgramList.get(kgramList.size() - 1).tokenID != id) {
+        			KGramPostingsEntry kgramPE = new KGramPostingsEntry(id);
+                	kgramList.add(kgramPE);
+        		}
+        	}
+            index.put(regex.substring(i, i+K), kgramList);
+        }
+        
+    }
+    
+    public void printKGrams(String s) {
+    	
+    	String[] kgrams = s.split(" ");
+        List<KGramPostingsEntry> postings = null;
+        for (String kgram : kgrams) {
+
+            if (postings == null) {
+                postings = getPostings(kgram);
+            } else {
+                postings = intersect(postings, getPostings(kgram));
+            }
+        }
+        if (postings == null) {
+            System.err.println("Found 0 posting(s)");
+        } else {
+            int resNum = postings.size();
+            System.err.println("Found " + resNum + " posting(s)");
+            if (resNum > 10) {
+                System.err.println("The first 10 of them are:");
+                resNum = 10;
+            }
+            for (int i = 0; i < resNum; i++) {
+                System.err.println(getTermByID(postings.get(i).tokenID));
+            }
         }
     }
 
     /** Get postings for the given k-gram */
     public List<KGramPostingsEntry> getPostings(String kgram) {
-        //
-        // YOUR CODE HERE
-        //
-        return null;
+    	return index.getOrDefault(kgram, null);
     }
 
     /** Get id of a term */
@@ -100,6 +156,58 @@ public class KGramIndex {
     /** Get a term by the given id */
     public String getTermByID(Integer id) {
         return id2term.get(id);
+    }
+    
+    private List<String> kgrams(String token) {
+        // check if there is a token at all
+        if (token.length() == 0) return List.of();
+        return IntStream.rangeClosed(-1, token.length() - (K - 1)).boxed().map(start -> {
+          var kgram = "";
+
+          if (start == -1) {
+            kgram += "^";
+            kgram += token.substring(start + 1, Math.min(start + K, token.length()));
+          } // start == -1
+          else if (start == token.length() - (K - 1)) {
+            kgram += token.substring(start, start + (K - 1));
+            kgram += "$";
+          } else {
+            kgram += token.substring(start, start + K);
+          }
+          return kgram;
+        }).collect(Collectors.toList());
+      }
+    
+    public List<String> getWildcardPostings(String term) {
+    	
+    	int wcIdx = term.indexOf("*");
+    	
+    	System.err.println("A la izquierda: " + term.substring(0, wcIdx));
+    	System.err.println("A la derecha: " + term.substring(wcIdx + 1, term.length()));
+    	
+    	var kgramsLeft = this.kgrams(term.substring(0, wcIdx));
+        var kgramsRight = this.kgrams(term.substring(wcIdx + 1, term.length()));
+        
+        var testRegex = String.format("^%s.*%s$", term.substring(0, wcIdx),term.substring(wcIdx + 1, term.length()) );
+        
+        if (kgramsLeft.size() > 1) {
+            kgramsLeft = kgramsLeft.subList(0, kgramsLeft.size() - 1);
+          }
+
+          // remove ^_
+        if (kgramsRight.size() > 1) {
+          kgramsRight = kgramsRight.subList(1, kgramsRight.size());
+        }
+          
+        kgramsLeft.addAll(kgramsRight);
+        
+        var rawPostings = kgramsLeft.stream().map(this::getPostings).reduce(this::intersect).orElse(List.of()).stream()
+                .map(entry -> this.getTermByID(entry.tokenID)).collect(Collectors.toList());
+
+        var postings = rawPostings.stream().filter(t -> t.matches(testRegex)).collect(Collectors.toList());
+        
+    	
+    	return postings;
     }
 
     private static HashMap<String,String> decodeArgs( String[] args ) {
