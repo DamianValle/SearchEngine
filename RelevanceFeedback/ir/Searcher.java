@@ -131,7 +131,7 @@ public class Searcher {
     private PostingsList postingsIntersection(ArrayList<PostingsList> postingsLists) {
     	PostingsList answer;
 
-		System.err.println("Intersection between sizes: " + Integer.toString(postingsLists.get(0).size()) + " " + Integer.toString(postingsLists.get(1).size()));
+		//System.err.println("Intersection between sizes: " + Integer.toString(postingsLists.get(0).size()) + " " + Integer.toString(postingsLists.get(1).size()));
     	
     	Iterator<PostingsList> iter = postingsLists.iterator();
     	
@@ -255,15 +255,20 @@ public class Searcher {
     	
     	System.err.println("PostingsPhrase");
     	System.err.println(postingsLists.size());
-		for(int i=0; i< postingsLists.size(); i++){
-			System.err.println("Size of list: " + Integer.toString(postingsLists.get(i).size()));
-		}
+		//for(int i=0; i< postingsLists.size(); i++){
+		//	System.err.println("Size of list: " + Integer.toString(postingsLists.get(i).size()));
+		//}
     	
     	PostingsList answer;
     	
     	Iterator<PostingsList> iter = postingsLists.iterator();
     	
     	PostingsList p1 = iter.next();
+
+		if(p1==null){
+			return null;
+		}
+
     	PostingsList p2; // = iter.next(); I need to put this inside the do while so that after the first one you can keep iterating.
     	
     	int current_offset = 1; //distance from the initial word in the query.
@@ -277,6 +282,10 @@ public class Searcher {
     		answer = new PostingsList();
     		
     		p2 = iter.next();
+
+			if(p2==null){
+				return null;
+			}
     		
     		pe1_idx = 0;
     		pe2_idx = 0;

@@ -27,6 +27,8 @@ public class KGramIndex {
     /** Index from k-grams to list of term ids that contain the k-gram */
     HashMap<String,List<KGramPostingsEntry>> index = new HashMap<String,List<KGramPostingsEntry>>();
 
+    HashMap<String, Integer> numKGrams = new HashMap<String, Integer>();
+
     /** The ID of the last processed term */
     int lastTermID = -1;
 
@@ -114,6 +116,7 @@ public class KGramIndex {
             index.put(regex.substring(i, i+K), kgramList);
         }
         
+        
     }
     
     public void printKGrams(String s) {
@@ -158,7 +161,7 @@ public class KGramIndex {
         return id2term.get(id);
     }
     
-    private List<String> kgrams(String token) {
+    public List<String> kgrams(String token) {
         // check if there is a token at all
         if (token.length() == 0) return List.of();
         return IntStream.rangeClosed(-1, token.length() - (K - 1)).boxed().map(start -> {

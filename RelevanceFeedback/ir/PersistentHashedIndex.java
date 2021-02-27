@@ -397,7 +397,7 @@ public class PersistentHashedIndex implements Index {
         	hash+=8;
     	}
     	
-    	System.err.println("FALLO GORDO");
+    	//System.err.println("getPostings(" + token + ") returned null");
     	
     	return null;
     	
