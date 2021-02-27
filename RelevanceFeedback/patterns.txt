@@ -8,40 +8,28 @@
 // As you have probably already understood, lines beginning
 // with "//" are comments.
 
-
-// ADD YOUR PATTERNS HERE
-
-
-
-//Email checking. We want to have something@something.
-//\w means alphanumerical and lowercase
-//(+) match one or more
-([\w\-\.]+)+@([\w\-\.]+)
-
-//For the URLs
-//The s is optional, that is why I have a ?
-(https?://.*?[a-z0-9]\/?[^\s]*)
-
-//Matches all the words that are hyphen separated
-((?:\w+-)+\w+)
-
-//Matches all the words that have 1.2 and 1,2
-([0-9]+){1}([\,\.\:][0-9]+){1,3}
-
-//Matches a sum or a dollar in front of a number
-[$+]\d{1,}
-
-//Matches words like e.g.
-[a-z]{1}\.{1,2}[a-z]{1}\.
-
-//Matches word're or word'word
-(\w+'\w+)
-
-//Matches 'word
-(?<!\w)'([\w]+)(?!\S)
-
-//Matches word extensions
-[a-zA-Z0-9\_]+\.(pdf|doc|ppt|xlsx)
-
 // Twenty-four seven
-\d+/\d+
+//\d+/\d+
+
+// http:// o  https:// luego posibilidad de www. Luego caracteres los que quieras luego un . Luego caracteres los que quieras luego /algo las veces que haga falta con posibilidad de / al final (creo que se puede comprimir quitando \/.+ la primera vez.)
+(http:\/\/|https:\/\/)(www.)?(.+).(.+)(\/.+(\/.+)+)?\/?
+
+//pal 34-3473-347374-abdsc
+(\w+)-((\w+)-?)+
+
+//pal email cualquier cosa @ algo.palabras
+(.+)@(.+).\w{1,}
+
+//pal 4.2. en 4.2 y para las horas 18:43:44
+\d+((\.|\,|\/|:)\d+)+
+
+//pal $80 y +1
+(\+|\$)\d+
+
+//pal England's y you're y can't y I'll y 'em y I'm y I'd
+(\w+)?'(s|re|t|ll|em|m|d)
+
+//pal e.g.
+\w+(\.\w+)+(\.)?
+
+

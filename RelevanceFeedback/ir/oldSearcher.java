@@ -46,10 +46,8 @@ public class Searcher {
     		if(queryterm.contains("*")) {
     			System.err.println("Tenemos un * chavales");
     			List<String> list = kgIndex.getWildcardPostings(queryterm);
-
-				postingsWildcarded.clear();
     			for(String s : list) {
-    				//System.err.println("Adding postingsList for " + s + " with size: " + Integer.toString(index.getPostings(s).size()));
+    				System.err.println("Adding postingsList for " + s + " with size: " + Integer.toString(index.getPostings(s).size()));
     				postingsWildcarded.add(index.getPostings(s));
     			}
     			p = postingsUnion(postingsWildcarded);
@@ -63,6 +61,9 @@ public class Searcher {
     		
         	postingsLists.add(p);
     	}
+    	
+    	System.err.println("FINAL SIZE: " + Integer.toString(postingsLists.get(0).size()));
+    	
     	
     	if( queryType == QueryType.INTERSECTION_QUERY ) {
     		System.err.println("Selected Intersection Query");
@@ -98,8 +99,6 @@ public class Searcher {
     
     private PostingsList postingsIntersection(ArrayList<PostingsList> postingsLists) {
     	PostingsList answer;
-
-		System.err.println("Intersection between sizes: " + Integer.toString(postingsLists.get(0).size()) + " " + Integer.toString(postingsLists.get(1).size()));
     	
     	Iterator<PostingsList> iter = postingsLists.iterator();
     	
@@ -223,9 +222,8 @@ public class Searcher {
     	
     	System.err.println("PostingsPhrase");
     	System.err.println(postingsLists.size());
-		for(int i=0; i< postingsLists.size(); i++){
-			System.err.println("Size of list: " + Integer.toString(postingsLists.get(i).size()));
-		}
+    	System.err.println(postingsLists.get(0).size());
+    	System.err.println(postingsLists.get(1).size());
     	
     	PostingsList answer;
     	
@@ -315,8 +313,6 @@ public class Searcher {
     	
     	return answer;
     }
-
-	
     
     public PostingsList postingsUnion(ArrayList<PostingsList> postingsLists) {
     	
@@ -342,18 +338,9 @@ public class Searcher {
     
     public PostingsList mergePostingsLists(PostingsList p1, PostingsList p2) {
     	
+    	System.err.println("Merging postingsLists...");
 		
     	PostingsList answer = new PostingsList();
-
-		if(p1==null && p2==null){
-			return null;
-		}
-		if(p1==null){
-			return p2;
-		}
-		if(p2==null){
-			return p1;
-		}
     	
     	int p1_idx = 0;
     	int p2_idx = 0;
@@ -395,6 +382,7 @@ public class Searcher {
     		}
     	}
     	
+    	System.err.println("Answer of size: " + Integer.toString(answer.size()));
     	
     	return answer;
 	}
@@ -406,5 +394,17 @@ public class Searcher {
 		
 		return new ArrayList<>(hashset);
 	}
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
 }

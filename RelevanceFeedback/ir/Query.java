@@ -137,9 +137,9 @@ public class Query {
     	 * 
     	 */
     	
-    	if(results==null) {
-    		return;
-    	}
+    	//if(results==null) {
+    	//	return;
+    	//}
     	
     	int n_relevant = 0;
     	
@@ -147,6 +147,10 @@ public class Query {
     		if(b) {
     			n_relevant++;
     		}
+    	}
+    	
+    	if(n_relevant==0) {
+    		return;
     	}
     	
     	//if(results.size() != docIsRelevant.length) {
