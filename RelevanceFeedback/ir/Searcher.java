@@ -41,28 +41,60 @@ public class Searcher {
     	ArrayList<PostingsList> postingsWildcarded = new ArrayList<PostingsList>();
     	PostingsList p = new PostingsList();
     	
-    	for(String queryterm : queries) {
+		if(queryType==queryType.RANKED_QUERY){
+			for(String queryterm : queries) {
     		
-    		if(queryterm.contains("*")) {
-    			System.err.println("Tenemos un * chavales");
-    			List<String> list = kgIndex.getWildcardPostings(queryterm);
+				if(queryterm.contains("*")) {
+					System.err.println("Tenemos un * chavales");
+					List<String> list = kgIndex.getWildcardPostings(queryterm);
+	
+					postingsWildcarded.clear();
+					for(String s : list) {
+						//System.err.println("Adding postingsList for " + s + " with size: " + Integer.toString(index.getPostings(s).size()));
+						p = index.getPostings(s);
+						if(p != null) {
+							p.weight = query.query_count.getOrDefault(queryterm, 1.0);
+						}
+						postingsLists.add(p);
+					}
+				} else {
+					p = index.getPostings(queryterm);
+					if(p != null) {
+						p.weight = query.query_count.getOrDefault(queryterm, 1.0);
+					}
+					postingsLists.add(p);
+				}
+				
+				
+				
+				
+			}
+		} else {
+			for(String queryterm : queries) {
+    		
+				if(queryterm.contains("*")) {
+					System.err.println("Tenemos un * chavales");
+					List<String> list = kgIndex.getWildcardPostings(queryterm);
+	
+					postingsWildcarded.clear();
+					for(String s : list) {
+						//System.err.println("Adding postingsList for " + s + " with size: " + Integer.toString(index.getPostings(s).size()));
+						postingsWildcarded.add(index.getPostings(s));
+					}
+					p = postingsUnion(postingsWildcarded);
+				} else {
+					p = index.getPostings(queryterm);
+				}
+				
+				if(p != null) {
+					p.weight = query.query_count.getOrDefault(queryterm, 1.0);
+				}
+				
+				postingsLists.add(p);
+			}
+		}
 
-				postingsWildcarded.clear();
-    			for(String s : list) {
-    				//System.err.println("Adding postingsList for " + s + " with size: " + Integer.toString(index.getPostings(s).size()));
-    				postingsWildcarded.add(index.getPostings(s));
-    			}
-    			p = postingsUnion(postingsWildcarded);
-    		} else {
-    			p = index.getPostings(queryterm);
-    		}
-    		
-    		if(p != null) {
-    			p.weight = query.query_count.getOrDefault(queryterm, 1.0);
-    		}
-    		
-        	postingsLists.add(p);
-    	}
+    	
     	
     	if( queryType == QueryType.INTERSECTION_QUERY ) {
     		System.err.println("Selected Intersection Query");
