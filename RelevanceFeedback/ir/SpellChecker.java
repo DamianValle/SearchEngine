@@ -124,8 +124,7 @@ public class SpellChecker {
     }
 
     private static int min(int... numbers) {
-        return Arrays.stream(numbers)
-          .min().orElse(Integer.MAX_VALUE);
+        return Arrays.stream(numbers).min().orElse(Integer.MAX_VALUE);
     }
 
     /**
@@ -136,10 +135,16 @@ public class SpellChecker {
 
         int count = 0;
 
+        System.err.println("Cheking...");
+
+        //if(query.getQueryTerms().stream().allMatch(term -> index.getPostings(term) != null)) return null;
+
+        int query_size = query.getQueryTerms().size();
+        ArrayList<String[]> query_corrections = new ArrayList<String[]>();
+
         query.getQueryTerms().stream().forEach(x -> {
-            String[] corrections = checkTerm(x);
-            System.err.println();
-            Arrays.stream(corrections).forEach(System.err::println);
+            query_corrections.add( checkTerm(x) );
+            //Arrays.stream(corrections).forEach(System.err::println);
         }
         );
 

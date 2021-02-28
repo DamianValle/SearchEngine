@@ -1,0 +1,76 @@
+private PostingsList phrase(ArrayList<PostingsList> postingsLists) {
+
+		if(postingsLists.stream().anyMatch(postingsList -> postingsList == null)) return null;
+
+		PostingsList answer = new PostingsList();
+
+		int pl_idx = 0;
+		int curr_offset = 1;
+		int pe1_idx = 0;
+		int pe2_idx = 0;
+		boolean finished = false;
+
+		HashMap<Integer, ArrayList<Integer>> validInitialOffsets = new HashMap<Integer, ArrayList<Integer>>();
+		ArrayList<Integer> validOffsetPE = new ArrayList<Integer>();
+
+		PostingsList p1 = postingsLists.get(0);
+
+		for ( PostingsEntry pe : p1.list ) {
+			validInitialOffsets.put(pe.docID, pe.offsetList);
+		}
+
+		PostingsList p2;
+
+		PostingsEntry pe1;
+		PostingsEntry pe2;
+
+
+		while(++pl_idx < postingsLists.size()) {
+
+			answer = new PostingsList();
+
+			p2 = postingsLists.get(pl_idx);
+
+			pe1_idx = 0;
+			pe2_idx = 0;
+
+			while(pe1_idx < p1.size() && pe2_idx < p2.size()) {
+
+				pe1 = p1.get(pe1_idx);
+				pe2 = p2.get(pe2_idx);
+
+				if(pe1.docID == pe2.docID) {
+
+					finished = false;
+					for( int offset1 : pe1.offsetList ) {
+						for( int offset2 : pe2.offsetList ) {
+							if(offset2 - offset1 == curr_offset) {
+								validOffsetPE.add(offset1);
+								answer.add(pe1);
+								finished = true;
+								break;
+							}
+						}
+						if(finished) {
+							break;
+						}
+					}
+
+
+					pe1_idx++;
+					pe2_idx++;
+
+				} else if (pe1.docID < pe2.docID) {
+					pe1_idx++;
+				} else {
+					pe2_idx++;
+				}
+
+				
+			}
+			curr_offset++;
+			p1 = answer;
+		}
+
+		return answer;
+	}

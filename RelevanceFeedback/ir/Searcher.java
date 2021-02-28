@@ -65,9 +65,6 @@ public class Searcher {
 					postingsLists.add(p);
 				}
 				
-				
-				
-				
 			}
 		} else {
 			for(String queryterm : queries) {
@@ -75,26 +72,30 @@ public class Searcher {
 				if(queryterm.contains("*")) {
 					System.err.println("Tenemos un * chavales");
 					List<String> list = kgIndex.getWildcardPostings(queryterm);
-	
+
 					postingsWildcarded.clear();
 					for(String s : list) {
 						//System.err.println("Adding postingsList for " + s + " with size: " + Integer.toString(index.getPostings(s).size()));
 						postingsWildcarded.add(index.getPostings(s));
 					}
+
 					p = postingsUnion(postingsWildcarded);
+
+					//p.list.stream().forEach( postingEntry -> System.err.println(index.docNames.get(postingEntry.docID)));
 				} else {
 					p = index.getPostings(queryterm);
 				}
 				
-				if(p != null) {
-					p.weight = query.query_count.getOrDefault(queryterm, 1.0);
-				}
+				//if(p != null) {
+				//	p.weight = query.query_count.getOrDefault(queryterm, 1.0);
+				//}
 				
 				postingsLists.add(p);
 			}
-		}
 
-    	
+			System.err.println("postingsLists.size() = " + Integer.toString(postingsLists.size()));
+			postingsLists.stream().filter(Objects::nonNull).forEach(posting -> System.err.println(posting.size()));
+		}
     	
     	if( queryType == QueryType.INTERSECTION_QUERY ) {
     		System.err.println("Selected Intersection Query");
@@ -115,7 +116,8 @@ public class Searcher {
     			return postingsLists.get(0);
     		} else if (postingsLists.size() > 1){
     			//System.err.println("Selected Phrase Query");
-        		return postingsPhrase(postingsLists);
+        		//return postingsPhrase(postingsLists);
+				return phrase(postingsLists);
     		}
     		
     	} else if ( queryType == QueryType.RANKED_QUERY ) {
@@ -249,15 +251,87 @@ public class Searcher {
     	
     	return answer;
     }
-    
+
+	private PostingsList phrase(ArrayList<PostingsList> postingsLists) {
+
+		if(postingsLists.stream().anyMatch(postingsList -> postingsList == null)) return null;
+
+		PostingsList answer = new PostingsList();
+
+		int pl_idx = 0;
+		int curr_offset = 1;
+		int pe1_idx = 0;
+		int pe2_idx = 0;
+		boolean finished = false;
+
+		HashMap<Integer, ArrayList<Integer>> validInitialOffsets = new HashMap<Integer, ArrayList<Integer>>();
+		ArrayList<Integer> validOffsetPE = new ArrayList<Integer>();
+
+		PostingsList p1 = postingsLists.get(0);
+
+		for ( PostingsEntry pe : p1.list ) {
+			validInitialOffsets.put(pe.docID, pe.offsetList);
+		}
+
+		PostingsList p2;
+
+		PostingsEntry pe1;
+		PostingsEntry pe2;
+
+
+		while(++pl_idx < postingsLists.size()) {
+
+			System.err.println("New word!");
+
+			answer = new PostingsList();
+
+			p2 = postingsLists.get(pl_idx);
+
+			pe1_idx = 0;
+			pe2_idx = 0;
+
+			while(pe1_idx < p1.size() && pe2_idx < p2.size()) {
+
+				pe1 = p1.get(pe1_idx);
+				pe2 = p2.get(pe2_idx);
+
+				if(pe1.docID == pe2.docID) {
+
+					finished = false;
+					validOffsetPE.clear();
+					for( int offset1 : validInitialOffsets.get(pe1.docID) ) {
+						for( int offset2 : pe2.offsetList ) {
+							if(offset2 - offset1 == curr_offset) {
+								if( ! finished ) answer.add(pe1);
+								validOffsetPE.add(offset1);
+								finished = true;
+							}
+						}
+					}
+
+					validInitialOffsets.put(pe1.docID, new ArrayList<>(validOffsetPE));
+
+					pe1_idx++;
+					pe2_idx++;
+
+				} else if (pe1.docID < pe2.docID) {
+					pe1_idx++;
+				} else {
+					pe2_idx++;
+				}
+
+				
+			}
+			curr_offset++;
+			p1 = answer;
+		}
+
+		return answer;
+	}
     
     private PostingsList postingsPhrase(ArrayList<PostingsList> postingsLists) {
-    	
+    	System.err.println("\n\n");
     	System.err.println("PostingsPhrase");
-    	System.err.println(postingsLists.size());
-		//for(int i=0; i< postingsLists.size(); i++){
-		//	System.err.println("Size of list: " + Integer.toString(postingsLists.get(i).size()));
-		//}
     	
     	PostingsList answer;
     	
@@ -300,6 +374,8 @@ public class Searcher {
 				for( int offset1 : postingsEntry1.offsetList ) {
 					for( int offset2 : postingsEntry2.offsetList ) {
 						if(offset1 + current_offset == offset2) {
+							
+
 							answer.add(postingsEntry1);
 							finished = true;
 							break;
@@ -324,6 +400,9 @@ public class Searcher {
     				for( int offset1 : postingsEntry1.offsetList ) {
     					for( int offset2 : postingsEntry2.offsetList ) {
     						if(offset1 + current_offset == offset2) {
+								System.err.println(index.docNames.get(postingsEntry1.docID));
+								System.err.println(current_offset);
+
     							answer.add(postingsEntry1);
     							finished = true;
     							break;
@@ -374,8 +453,6 @@ public class Searcher {
     	while(idx < postingsLists.size()) {
     		answer = mergePostingsLists(answer, postingsLists.get(idx++));
     	}
-    	
-    	
     	
     	return answer;
     	
@@ -435,7 +512,6 @@ public class Searcher {
     			answer.add(p2.get(i));
     		}
     	}
-    	
     	
     	return answer;
 	}

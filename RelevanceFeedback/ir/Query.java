@@ -150,6 +150,7 @@ public class Query {
     	}
     	
     	if(n_relevant==0) {
+            System.err.println("0 relevant");
     		return;
     	}
     	

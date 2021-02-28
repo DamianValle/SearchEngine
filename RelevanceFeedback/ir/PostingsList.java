@@ -14,7 +14,7 @@ import java.util.Collections;
 public class PostingsList {
     
     /** The postings list */
-    private ArrayList<PostingsEntry> list = new ArrayList<PostingsEntry>();
+    public ArrayList<PostingsEntry> list = new ArrayList<PostingsEntry>();
     
     public double weight = 1;
     
