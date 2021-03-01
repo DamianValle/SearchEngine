@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Collections;
 
 
 public class SpellChecker {
@@ -23,6 +24,8 @@ public class SpellChecker {
 
     /** K-gram index to be used by the spell checker */
     KGramIndex kgIndex;
+
+    HashMap<ArrayList<String>, Integer> add_scores;
 
     /** The auxiliary class for containing the value of your ranking function for a token */
     class KGramStat implements Comparable {
@@ -40,7 +43,7 @@ public class SpellChecker {
 
         public int compareTo(Object other) {
             if (this.score == ((KGramStat)other).score) return 0;
-            return this.score < ((KGramStat)other).score ? -1 : 1;
+            return this.score > ((KGramStat)other).score ? -1 : 1;
         }
 
         public String toString() {
@@ -132,23 +135,31 @@ public class SpellChecker {
      *  <code>limit</code> ranked suggestions for spelling correction.
      */
     public String[] check(Query query, int limit) {
-
-        int count = 0;
-
         System.err.println("Cheking...");
 
-        //if(query.getQueryTerms().stream().allMatch(term -> index.getPostings(term) != null)) return null;
+        if(query.getQueryTerms().size() == 1) {
 
-        int query_size = query.getQueryTerms().size();
-        ArrayList<String[]> query_corrections = new ArrayList<String[]>();
+            ArrayList<KGramStat> corrected_list = new ArrayList<KGramStat>();
+            String[] corrected = checkTerm(query.getQueryTerms().get(0));
+            Arrays.asList(corrected).stream().forEach(term -> corrected_list.add(new KGramStat(term, index.getPostings(term).size())));
 
-        query.getQueryTerms().stream().forEach(x -> {
-            query_corrections.add( checkTerm(x) );
-            //Arrays.stream(corrections).forEach(System.err::println);
+            return corrected_list.stream().sorted().map(KGramStat::getToken).collect(Collectors.toList()).toArray(new String[0]);
+        } else {
+
+            List<List<KGramStat>> list = new ArrayList<List<KGramStat>>();
+            List<KGramStat> term_list = new ArrayList<KGramStat>();
+
+            query.getQueryTerms().stream().forEach(term -> {
+                term_list.clear();
+                Arrays.asList(checkTerm(term)).stream().forEach(corrected_term -> {
+                    term_list.add(new KGramStat(corrected_term, index.getPostings(corrected_term).size()));
+                });
+                Collections.sort(term_list);
+                list.add(term_list);
+            });
+
+            return mergeCorrections(list, limit).stream().map(KGramStat::getToken).collect(Collectors.toList()).toArray(new String[0]);
         }
-        );
-
-        return null;
     }
 
     private String[] checkTerm(String word) {
@@ -169,7 +180,7 @@ public class SpellChecker {
                     }
                 });
             } catch (Exception e){
-                System.err.println("null kgindex postings for kgram: " + kgram);
+                System.err.println("Null kgindex postings for kgram: " + kgram);
             }
         }
         );
@@ -184,6 +195,22 @@ public class SpellChecker {
      */
     private List<KGramStat> mergeCorrections(List<List<KGramStat>> qCorrections, int limit) {
         System.err.println("mergeCorrections!!!!");
+
+        add_scores = new HashMap<ArrayList<String>, Integer>();
+
+        qCorrections.get(0).stream().limit(10).forEach(correction -> {
+            add_scores.put(Arrays.toList(correction.token), correction.score);
+            System.err.println(Arrays.toList(correction.token));
+        });
+
+        for(int i=1; i<qCorrections.size(); i++){
+            updateQuery(qCorrections.get(i), limit);
+        }
+
         return null;
+    }
+
+    private void updateQuery(List<KGramStat> corrected_terms, int limit) {
+        
     }
 }
