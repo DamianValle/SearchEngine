@@ -10,9 +10,15 @@ package ir;
 
 public class KGramPostingsEntry {
     int tokenID;
+    int count;
 
     public KGramPostingsEntry(int tokenID) {
         this.tokenID = tokenID;
+    }
+
+    public KGramPostingsEntry(int tokenID, int count) {
+        this.tokenID = tokenID;
+        this.count = count;
     }
 
     public KGramPostingsEntry(KGramPostingsEntry other) {

@@ -99,23 +99,24 @@ public class KGramIndex {
     	int id = generateTermID();
     	term2id.put(token, id);
     	id2term.put(id, token);
+
+        HashSet<String> kgrams = new HashSet<String>(kgrams(token));
+        int size = kgrams.size();
         
-        String regex = "^" + token + "$";
-        
-        for (int i=0; i < token.length() + 3 - K; i++) {
-        	List<KGramPostingsEntry> kgramList = index.getOrDefault(regex.substring(i, i+K), new ArrayList<KGramPostingsEntry>());
+        kgrams.stream().forEach(kgram -> {
+        	List<KGramPostingsEntry> kgramList = index.getOrDefault(kgram, new ArrayList<KGramPostingsEntry>());
         	if(kgramList.size() == 0) {
-        		KGramPostingsEntry kgramPE = new KGramPostingsEntry(id);
+        		KGramPostingsEntry kgramPE = new KGramPostingsEntry(id, size);
             	kgramList.add(kgramPE);
         	} else {
         		if(kgramList.get(kgramList.size() - 1).tokenID != id) {
-        			KGramPostingsEntry kgramPE = new KGramPostingsEntry(id);
+        			KGramPostingsEntry kgramPE = new KGramPostingsEntry(id, size);
                 	kgramList.add(kgramPE);
         		}
         	}
-            index.put(regex.substring(i, i+K), kgramList);
-        }
-        
+            index.put(kgram, kgramList);
+        });
+
         
     }
     

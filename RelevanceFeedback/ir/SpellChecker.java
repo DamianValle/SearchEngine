@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.HashMap;
@@ -24,8 +25,6 @@ public class SpellChecker {
 
     /** K-gram index to be used by the spell checker */
     KGramIndex kgIndex;
-
-    HashMap<ArrayList<String>, Integer> add_scores;
 
     /** The auxiliary class for containing the value of your ranking function for a token */
     class KGramStat implements Comparable {
@@ -155,7 +154,7 @@ public class SpellChecker {
                     term_list.add(new KGramStat(corrected_term, index.getPostings(corrected_term).size()));
                 });
                 Collections.sort(term_list);
-                list.add(term_list);
+                list.add(term_list.stream().limit(limit).collect(Collectors.toList()));
             });
 
             return mergeCorrections(list, limit).stream().map(KGramStat::getToken).collect(Collectors.toList()).toArray(new String[0]);
@@ -170,20 +169,37 @@ public class SpellChecker {
 
         Set<String> set = new HashSet<String>();
 
-        kgIndex.kgrams(word).stream().forEach( kgram -> {
+        HashMap<String, Integer> token_count = new HashMap<String, Integer>();
+
+        List<String> kgrams = kgIndex.kgrams(word);
+        int query_word_num_kgrams = kgrams.size();
+
+        kgrams.stream().forEach( kgram -> {
             try{
                 kgIndex.getPostings(kgram).stream().forEach( kgEntry -> {
                     String term = kgIndex.getTermByID(kgEntry.tokenID);
-
-                    if(jaccardCoeff(word, term) >= JACCARD_THRESHOLD){
-                        set.add(term);
-                    }
+                    token_count.merge(term, 1, (x,y) -> x+y);
                 });
             } catch (Exception e){
                 System.err.println("Null kgindex postings for kgram: " + kgram);
             }
         }
         );
+
+        set.clear();
+
+        for (HashMap.Entry<String, Integer> entry : token_count.entrySet()) {
+            //System.err.println("\n\n\nJACCARD BETWEEN " + word + " " + entry.getKey());
+            //System.err.println("Bueno y lento:");
+            //System.err.println(jaccardCoeff(word, entry.getKey()));
+            //System.err.println("\nNuevo y rapido");
+            //System.err.println(jaccard(query_word_num_kgrams, entry.getKey().length() + 1, entry.getValue()));
+            
+            if( jaccard(query_word_num_kgrams, entry.getKey().length() + 1, entry.getValue()) >= JACCARD_THRESHOLD ) {
+                set.add(entry.getKey());
+            }
+        }
+        
 
         return set.stream().filter(term -> editDistance(word, term) <= MAX_EDIT_DISTANCE).collect(Collectors.toList()).toArray(new String[0]);
     }
@@ -194,23 +210,26 @@ public class SpellChecker {
      *  to <code>limit</code> corrected phrases.
      */
     private List<KGramStat> mergeCorrections(List<List<KGramStat>> qCorrections, int limit) {
-        System.err.println("mergeCorrections!!!!");
 
-        add_scores = new HashMap<ArrayList<String>, Integer>();
-
-        qCorrections.get(0).stream().limit(10).forEach(correction -> {
-            add_scores.put(Arrays.toList(correction.token), correction.score);
-            System.err.println(Arrays.toList(correction.token));
-        });
+        List<KGramStat> finalList = qCorrections.get(0);
 
         for(int i=1; i<qCorrections.size(); i++){
-            updateQuery(qCorrections.get(i), limit);
+            finalList = updateQuery(finalList, qCorrections.get(i), limit);
         }
 
-        return null;
+        return finalList;
     }
 
-    private void updateQuery(List<KGramStat> corrected_terms, int limit) {
+    private List<KGramStat> updateQuery(List<KGramStat> leftList, List<KGramStat> rightList, int limit) {
+
+        List<KGramStat> answer = new ArrayList<KGramStat>();
         
+        for (KGramStat k_left : leftList) {
+            for (KGramStat k_right : rightList) {
+                answer.add(new KGramStat(k_left.token + " " + k_right.token, k_left.score + k_right.score));
+            }
+        }
+
+        return answer.stream().sorted().limit(limit).collect(Collectors.toList());
     }
 }
