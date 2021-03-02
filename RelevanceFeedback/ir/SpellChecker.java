@@ -153,8 +153,7 @@ public class SpellChecker {
                 Arrays.asList(checkTerm(term)).stream().forEach(corrected_term -> {
                     term_list.add(new KGramStat(corrected_term, index.getPostings(corrected_term).size()));
                 });
-                Collections.sort(term_list);
-                list.add(term_list.stream().limit(limit).collect(Collectors.toList()));
+                list.add(term_list.stream().sorted().limit(limit).collect(Collectors.toList()));
             });
 
             return mergeCorrections(list, limit).stream().map(KGramStat::getToken).collect(Collectors.toList()).toArray(new String[0]);
@@ -167,14 +166,13 @@ public class SpellChecker {
             return new String[] {word};
         }
 
-        Set<String> set = new HashSet<String>();
-
         HashMap<String, Integer> token_count = new HashMap<String, Integer>();
 
         List<String> kgrams = kgIndex.kgrams(word);
-        int query_word_num_kgrams = kgrams.size();
+        HashSet<String> set = new HashSet<String>(kgrams);
 
-        kgrams.stream().forEach( kgram -> {
+        int query_word_num_kgrams = set.size();
+        set.stream().forEach( kgram -> {
             try{
                 kgIndex.getPostings(kgram).stream().forEach( kgEntry -> {
                     String term = kgIndex.getTermByID(kgEntry.tokenID);
@@ -189,12 +187,6 @@ public class SpellChecker {
         set.clear();
 
         for (HashMap.Entry<String, Integer> entry : token_count.entrySet()) {
-            //System.err.println("\n\n\nJACCARD BETWEEN " + word + " " + entry.getKey());
-            //System.err.println("Bueno y lento:");
-            //System.err.println(jaccardCoeff(word, entry.getKey()));
-            //System.err.println("\nNuevo y rapido");
-            //System.err.println(jaccard(query_word_num_kgrams, entry.getKey().length() + 1, entry.getValue()));
-            
             if( jaccard(query_word_num_kgrams, entry.getKey().length() + 1, entry.getValue()) >= JACCARD_THRESHOLD ) {
                 set.add(entry.getKey());
             }
@@ -214,7 +206,14 @@ public class SpellChecker {
         List<KGramStat> finalList = qCorrections.get(0);
 
         for(int i=1; i<qCorrections.size(); i++){
-            finalList = updateQuery(finalList, qCorrections.get(i), limit);
+            List<KGramStat> correction = qCorrections.get(i);
+            if(correction.size() == 1) {
+                finalList = finalList.stream()
+                .map(kgramstat -> new KGramStat(kgramstat.token + " " + correction.get(0).token, kgramstat.score))
+                .collect(Collectors.toList());
+            } else {
+                finalList = updateQuery(finalList, correction, limit);
+            }
         }
 
         return finalList;

@@ -433,7 +433,6 @@ public class PersistentHashedIndex implements Index {
     
     public void loadPageRank() {
     	try {
-    		System.err.println("Loading PageRank...");
     		File davisTitlesFile = new File("./pagerank/davisTitles.txt");
     		FileReader freader = new FileReader(davisTitlesFile);
     		BufferedReader br = new BufferedReader(freader);
@@ -463,16 +462,9 @@ public class PersistentHashedIndex implements Index {
     			docPageRank.put(entry.getKey(), pageRankHash.get(davisTitles.get(docpath[docpath.length - 1])));
     		}
     		
-    		
     		davisTitles = null;
     		pageRankHash = null;
-    		
-    		System.err.println("Loaded PageRank...");
-    		
-    		//System.err.println("File with docID 7865 has a name of " + docNames.get(7865) + " and a pagerank of " + Double.toString(docPageRank.get(7865)));
-    		
-    		
-    		
+            
     	} catch (Exception e) {
     		System.err.println("ojico maño");
     		e.printStackTrace();

@@ -106,13 +106,12 @@ public class RankedSearch {
   	double idf;
   	
   	for(PostingsList postingsList : postingsLists) {
-      	//postingsList = index.getPostings(queryterm);
+
+		if(postingsList == null) {
+			continue;
+		}
       	
       	idf = Math.log((double)N / postingsList.size());
-      	
-      	
-      	//System.err.println("El termino  aparece en " + Integer.toString(postingsList.size()) + 
-      	//		" de un total de documentos N=" + Double.toString(N));
       	
       	for(int i=0; i<postingsList.size(); i++) {
       		docID = postingsList.get(i).docID;

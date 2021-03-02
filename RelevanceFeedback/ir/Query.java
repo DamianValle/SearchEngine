@@ -137,51 +137,37 @@ public class Query {
     	 * 
     	 */
     	
-    	//if(results==null) {
-    	//	return;
-    	//}
-    	
     	int n_relevant = 0;
-    	
     	for (boolean b : docIsRelevant) {
     		if(b) {
     			n_relevant++;
     		}
     	}
+    	if(n_relevant==0) return;
     	
-    	if(n_relevant==0) {
-            System.err.println("0 relevant");
-    		return;
-    	}
-    	
-    	//if(results.size() != docIsRelevant.length) {
-    	//	System.err.println("Show all results.");
-    	//	return;
-    	//}
-    	
-    	System.err.println("Results size: " + Integer.toString(results.size()));
-    	System.err.println("docisrelevant size: " + Integer.toString(docIsRelevant.length));
-    	
+        int relevant_count = 0;
     	for (int i=0; i<docIsRelevant.length; i++) {
     		if(docIsRelevant[i]) {
     			String pathname = engine.index.docNames.get(results.get(i).docID);
+                if(pathname.equals("../../SE/lab1/datasets/davisWiki/Math.f")) {
+                    pathname = "../../SE/lab1/datasets/davisWiki/Mathematics.f";
+                }
     			processFile(pathname, engine, n_relevant);
+                relevant_count++;
+                if(relevant_count == n_relevant) break;
     		}
     	}
     	
-    	for ( QueryTerm qt : this.queryterm) {
-    		query_count.merge(qt.term, alpha, (x,y) -> x+y);
-    	}
+    	//for ( QueryTerm qt : this.queryterm) {
+    	//	query_count.merge(qt.term, alpha, Double::sum);
+    	//}
+
+        this.queryterm.stream().forEach(qt -> query_count.merge(qt.term, alpha, Double::sum));
     	
     	this.queryterm.clear();
-    	
     	for (Map.Entry<String, Double> entry : query_count.entrySet()) {
     		this.queryterm.add(new QueryTerm(entry.getKey(), entry.getValue()));
     	}
-    	
-    	
-        //System.err.println("Relevance done.");
-        
     }
     
     public void processFile(String pathname, Engine engine, int n_relevant) {
@@ -189,20 +175,15 @@ public class Query {
     		File f = new File(pathname);
             Reader reader = new InputStreamReader( new FileInputStream(f), StandardCharsets.UTF_8 );
             Tokenizer tok = new Tokenizer( reader, true, false, true, "patterns.txt" );
-            HashMap<String, Double> tokenLength = new HashMap<String, Double>();
+            
             while ( tok.hasMoreTokens() ) {
                 String token = tok.nextToken();
-                tokenLength.merge(token, 1.0, (x,y) -> x+y);
-            }
-            for (Map.Entry<String, Double> entry : tokenLength.entrySet()) {
-            	//System.err.println(entry.getKey() + ": " + Double.toString(entry.getValue() * beta / n_relevant));
-                query_count.put(entry.getKey(), entry.getValue() * beta / n_relevant);
+                query_count.merge(token, beta * 1./n_relevant, Double::sum);
             }
             reader.close();
         } catch ( IOException e ) {
             System.err.println( "Warning: IOException during indexing." );
         }
     }
+
 }
-
-

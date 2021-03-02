@@ -50,7 +50,6 @@ public class Searcher {
 	
 					postingsWildcarded.clear();
 					for(String s : list) {
-						//System.err.println("Adding postingsList for " + s + " with size: " + Integer.toString(index.getPostings(s).size()));
 						p = index.getPostings(s);
 						if(p != null) {
 							p.weight = query.query_count.getOrDefault(queryterm, 1.0);
@@ -98,7 +97,6 @@ public class Searcher {
 		}
     	
     	if( queryType == QueryType.INTERSECTION_QUERY ) {
-    		System.err.println("Selected Intersection Query");
     		
     		if(postingsLists.size() == 1) {
     			return postingsLists.get(0);
@@ -112,19 +110,13 @@ public class Searcher {
     	} else if ( queryType == QueryType.PHRASE_QUERY ) {
     		
     		if(postingsLists.size() == 1) {
-    			//System.err.println("Query of size 1");
     			return postingsLists.get(0);
     		} else if (postingsLists.size() > 1){
-    			//System.err.println("Selected Phrase Query");
-        		//return postingsPhrase(postingsLists);
 				return phrase(postingsLists);
     		}
     		
     	} else if ( queryType == QueryType.RANKED_QUERY ) {
-    		//System.err.println("Selected Ranked Query");
-    		
     		return RankedSearch.search(postingsLists, index, rankingType, normalizationType, hitsRanker);
-    		
     	}
     	
     	return null;
@@ -140,13 +132,6 @@ public class Searcher {
     	PostingsList p1 = iter.next();
     	PostingsList p2; // = iter.next(); I need to put this inside the do while so that after the first one you can keep iterating.
     	
-    	/**
-    	for( int i = 0; i < p1.size(); i++ ) {
-    		System.err.println(p1.get(i).docID);
-    	} // Checks if docIDs are sorted in ascending order.
-    	*/
-    	
-    	//Iterator<PostingsEntry> postingsEntryIterator1, postingsEntryIterator2;
     	PostingsEntry postingsEntry1, postingsEntry2;
     	
     	int pe1_idx, pe2_idx;
@@ -280,8 +265,6 @@ public class Searcher {
 
 
 		while(++pl_idx < postingsLists.size()) {
-
-			System.err.println("New word!");
 
 			answer = new PostingsList();
 

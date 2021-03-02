@@ -116,8 +116,6 @@ public class KGramIndex {
         	}
             index.put(kgram, kgramList);
         });
-
-        
     }
     
     public void printKGrams(String s) {
@@ -163,52 +161,40 @@ public class KGramIndex {
     }
     
     public List<String> kgrams(String token) {
-        // check if there is a token at all
         if (token.length() == 0) return List.of();
-        return IntStream.rangeClosed(-1, token.length() - (K - 1)).boxed().map(start -> {
-          var kgram = "";
+        
+        String oreo = "^" + token + "$";
 
-          if (start == -1) {
-            kgram += "^";
-            kgram += token.substring(start + 1, Math.min(start + K, token.length()));
-          } // start == -1
-          else if (start == token.length() - (K - 1)) {
-            kgram += token.substring(start, start + (K - 1));
-            kgram += "$";
-          } else {
-            kgram += token.substring(start, start + K);
-          }
-          return kgram;
-        }).collect(Collectors.toList());
-      }
+        List<String> answer = new ArrayList<String>();
+        for(int i=0; i<oreo.length()-K+1; i++) {
+            answer.add(oreo.substring(i, i+K));
+        }
+
+        return answer;
+    }
+
     
     public List<String> getWildcardPostings(String term) {
-    	
-    	int wcIdx = term.indexOf("*");
-    	
-    	System.err.println("A la izquierda: " + term.substring(0, wcIdx));
-    	System.err.println("A la derecha: " + term.substring(wcIdx + 1, term.length()));
-    	
-    	var kgramsLeft = this.kgrams(term.substring(0, wcIdx));
-        var kgramsRight = this.kgrams(term.substring(wcIdx + 1, term.length()));
-        
-        var testRegex = String.format("^%s.*%s$", term.substring(0, wcIdx),term.substring(wcIdx + 1, term.length()) );
-        
-        if (kgramsLeft.size() > 1) {
-            kgramsLeft = kgramsLeft.subList(0, kgramsLeft.size() - 1);
-          }
 
-          // remove ^_
-        if (kgramsRight.size() > 1) {
-          kgramsRight = kgramsRight.subList(1, kgramsRight.size());
-        }
-          
+        System.err.println(term);
+
+    	int wcIdx = term.indexOf("*");
+
+        System.err.println("wcIdx: " + Integer.toString(wcIdx));
+    	
+    	List<String> kgramsLeft = this.kgrams(term.substring(0, wcIdx));
+        List<String> kgramsRight = this.kgrams(term.substring(wcIdx + 1, term.length()));
+
+        if (kgramsLeft.size() > 1) kgramsLeft = kgramsLeft.subList(0, kgramsLeft.size()-1);
+        if (kgramsRight.size()> 1)kgramsRight = kgramsRight.subList(1, kgramsRight.size());
+
         kgramsLeft.addAll(kgramsRight);
         
-        var rawPostings = kgramsLeft.stream().map(this::getPostings).reduce(this::intersect).orElse(List.of()).stream()
+        List<String> rawPostings = kgramsLeft.stream().map(this::getPostings).reduce(this::intersect).orElse(List.of()).stream()
                 .map(entry -> this.getTermByID(entry.tokenID)).collect(Collectors.toList());
 
-        var postings = rawPostings.stream().filter(t -> t.matches(testRegex)).collect(Collectors.toList());
+        String testRegex = String.format("^%s.*%s$", term.substring(0, wcIdx),term.substring(wcIdx + 1, term.length()));
+        List<String> postings = rawPostings.stream().filter(t -> t.matches(testRegex)).collect(Collectors.toList());
         
     	
     	return postings;
