@@ -26,5 +26,6 @@ hs_err_pid*
 
 .DS_Store
 
-
-index/
+PersistentHashedIndex/index/
+RankedRetrieval/index/
+RelevanceFeedback/index/
