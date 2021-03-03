@@ -215,7 +215,6 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
     	HashSet<Long> used_hashes = new HashSet<Long>();
     	
     	try {
-    		//while(ptr < dataFile.length()-5) {
     		while(true) {
     			
     			finalDataFile.seek(ptr);
@@ -271,7 +270,6 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
     		dataFile = new RandomAccessFile( "./index/data" + Integer.toString(dataFileCount), "rw" );
     		System.err.println("Created data" + Integer.toString(dataFileCount));
     		writeIndex(dataFile);
-    		//dataFile.close();
     		
     		try {
         		merge_thread.join();
@@ -324,16 +322,4 @@ public class ScalablePersistentHashedIndex extends PersistentHashedIndex {
         
         System.err.println("ALL DONE!!!");
     }
-	
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-	
 }

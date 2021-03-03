@@ -98,10 +98,7 @@ public class Indexer {
     
     public void calculateEuclidean() {
     	
-    	System.err.println("Calculating Euclidean...");
-    	
     	int N = index.docLengths.size();
-    	System.err.println("N is: " + Integer.toString(N));
     	
     	for (HashMap.Entry<Integer, HashMap<String, Integer>> entry : docTokenLengths.entrySet()) {
     		double sum = 0;
@@ -113,7 +110,6 @@ public class Indexer {
     		}
     		index.docLengthsEuclidean.put(entry.getKey(), Math.sqrt(sum));
     	}
-    	System.err.println("Euclidean done.");
     }
 
 

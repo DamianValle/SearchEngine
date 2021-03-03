@@ -3,6 +3,8 @@
  *   Information Retrieval course at KTH.
  * 
  *   Johan Boye, KTH, 2018
+ * 
+ *   Damian Valle, KTH, 2021
  */  
 
 package ir;
@@ -42,7 +44,7 @@ public class PersistentHashedIndex implements Index {
     public static final String DOCINFO_FNAME = "docInfo";
 
     /** The dictionary hash table on disk can fit this many entries. */
-    public static final long TABLESIZE = 3499999L;//611953L;
+    public static final long TABLESIZE = 3499999L;
 
     /** The dictionary hash table is stored in this file. */
     RandomAccessFile dictionaryFile;
@@ -152,10 +154,6 @@ public class PersistentHashedIndex implements Index {
     	
     	
     }
-
-
-    // ==================================================================
-    
     
     /**
      *  Constructor. Opens the dictionary file and the data file.
@@ -268,8 +266,6 @@ public class PersistentHashedIndex implements Index {
     	
     	String serializedEntry = readData(ptr+9, sizeint);
     	
-    	//System.err.println(serializedEntry);
-    	
     	return new Entry(serializedEntry);
     }
 
@@ -335,8 +331,6 @@ public class PersistentHashedIndex implements Index {
             long hash;
             boolean col = false;
             
-            //HashSet<Long> used_hashes = new HashSet<Long>();
-            
             for (HashMap.Entry<String, PostingsList> item : index.entrySet()) {
                 token = item.getKey();
                 postingsList = item.getValue();
@@ -346,18 +340,14 @@ public class PersistentHashedIndex implements Index {
                 
                 col = false;
                 
-                //while(used_hashes.contains(hash)) {
                 while(!isDictionaryNull(hash)) {
                 	hash+=8;
                 	
                 	col = true;
                 }
                 
-                if(col) {
-                	collisions++;
-                }
-                
-                //used_hashes.add(hash);
+                if(col) collisions++;
+
                 writeDictionary(hash, free);
                 entry = new Entry(token, postingsList);
                 
@@ -397,10 +387,7 @@ public class PersistentHashedIndex implements Index {
         	hash+=8;
     	}
     	
-    	//System.err.println("getPostings(" + token + ") returned null");
-    	
     	return null;
-    	
     }
     
     public PostingsList getPostingsOnTheFly( String token ) {
@@ -426,8 +413,8 @@ public class PersistentHashedIndex implements Index {
      */
     public void cleanup() {
         System.err.println( index.keySet().size() + " unique words" );
-        //System.err.print( "Writing index to disk..." );
-        //writeIndex();
+        System.err.print( "Writing index to disk..." );
+        writeIndex();
         System.err.println( "done!" );
     }
     
@@ -470,7 +457,4 @@ public class PersistentHashedIndex implements Index {
     		e.printStackTrace();
     	}
     }
-    
-    
-    
 }

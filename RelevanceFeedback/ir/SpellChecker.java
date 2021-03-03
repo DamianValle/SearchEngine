@@ -212,14 +212,14 @@ public class SpellChecker {
                 .map(kgramstat -> new KGramStat(kgramstat.token + " " + correction.get(0).token, kgramstat.score))
                 .collect(Collectors.toList());
             } else {
-                finalList = updateQuery(finalList, correction, limit);
+                finalList = mergeCorrections(finalList, correction, limit);
             }
         }
 
         return finalList;
     }
 
-    private List<KGramStat> updateQuery(List<KGramStat> leftList, List<KGramStat> rightList, int limit) {
+    private List<KGramStat> mergeCorrections(List<KGramStat> leftList, List<KGramStat> rightList, int limit) {
 
         List<KGramStat> answer = new ArrayList<KGramStat>();
         

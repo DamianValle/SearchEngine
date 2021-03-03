@@ -43,9 +43,7 @@ public class Searcher {
     	
 		if(queryType==queryType.RANKED_QUERY){
 			for(String queryterm : queries) {
-    		
 				if(queryterm.contains("*")) {
-					System.err.println("Tenemos un * chavales");
 					List<String> list = kgIndex.getWildcardPostings(queryterm);
 	
 					postingsWildcarded.clear();
@@ -63,45 +61,35 @@ public class Searcher {
 					}
 					postingsLists.add(p);
 				}
-				
 			}
 		} else {
 			for(String queryterm : queries) {
     		
 				if(queryterm.contains("*")) {
-					System.err.println("Tenemos un * chavales");
 					List<String> list = kgIndex.getWildcardPostings(queryterm);
 
 					postingsWildcarded.clear();
 					for(String s : list) {
-						//System.err.println("Adding postingsList for " + s + " with size: " + Integer.toString(index.getPostings(s).size()));
 						postingsWildcarded.add(index.getPostings(s));
 					}
 
-					p = postingsUnion(postingsWildcarded);
-
-					//p.list.stream().forEach( postingEntry -> System.err.println(index.docNames.get(postingEntry.docID)));
+					p = postingsUnion(postingsWildcarded, queryType);
 				} else {
 					p = index.getPostings(queryterm);
 				}
 				
-				//if(p != null) {
-				//	p.weight = query.query_count.getOrDefault(queryterm, 1.0);
-				//}
-				
 				postingsLists.add(p);
 			}
-
-			System.err.println("postingsLists.size() = " + Integer.toString(postingsLists.size()));
-			postingsLists.stream().filter(Objects::nonNull).forEach(posting -> System.err.println(posting.size()));
 		}
     	
+
+
+		
     	if( queryType == QueryType.INTERSECTION_QUERY ) {
     		
     		if(postingsLists.size() == 1) {
     			return postingsLists.get(0);
     		} else if (postingsLists.size() > 1){
-    			//System.err.println("Intersection Mode");
     			return postingsIntersection(postingsLists);
     		} else {
     			System.err.println("Wrong query size.");
@@ -125,12 +113,10 @@ public class Searcher {
     private PostingsList postingsIntersection(ArrayList<PostingsList> postingsLists) {
     	PostingsList answer;
 
-		//System.err.println("Intersection between sizes: " + Integer.toString(postingsLists.get(0).size()) + " " + Integer.toString(postingsLists.get(1).size()));
-    	
     	Iterator<PostingsList> iter = postingsLists.iterator();
     	
     	PostingsList p1 = iter.next();
-    	PostingsList p2; // = iter.next(); I need to put this inside the do while so that after the first one you can keep iterating.
+    	PostingsList p2;
     	
     	PostingsEntry postingsEntry1, postingsEntry2;
     	
@@ -142,24 +128,11 @@ public class Searcher {
     		
     		p2 = iter.next();
     		
-    		//p1.add(null);
-    		//p2.add(null);
     		
     		if(p1==null || p2==null) {
     			return null;
     		}
     		
-    		/**
-    		System.err.println("p1 posting list: ");
-    		for( int i = 0; i < p1.size(); i++ ) {
-        		System.err.println(p1.get(i).docID);
-        	}
-    		
-    		System.err.println("p2 posting list: ");
-    		for( int i = 0; i < p2.size(); i++ ) {
-        		System.err.println(p2.get(i).docID);
-        	}
-        	*/
     		
     		pe1_idx = 0;
     		pe2_idx = 0;
@@ -168,7 +141,6 @@ public class Searcher {
     		postingsEntry2 = p2.get(pe2_idx++);
     		
 			if( postingsEntry1.docID == postingsEntry2.docID ) {
-				//System.err.println(p1.size());
 				answer.add(postingsEntry1);
 				
 				if(pe1_idx >= p1.size()) {
@@ -183,16 +155,11 @@ public class Searcher {
 					postingsEntry2 = p2.get(pe2_idx++);
 				}
 				
-				//postingsEntry1 = p1.get(pe1_idx++);
-				//postingsEntry2 = p2.get(pe2_idx++);
 			}
     		
 			while( postingsEntry1 != null && postingsEntry2 != null ) {
-				
-    			//System.err.println("p1 docID: " + postingsEntry1.docID + " ||| p2 docID: " + postingsEntry2.docID);
     			
     			if( postingsEntry1.docID == postingsEntry2.docID ) {
-    				//System.err.println("Found match!");
     				answer.add(postingsEntry1);
     				
     				if(pe1_idx >= p1.size()) {
@@ -226,13 +193,11 @@ public class Searcher {
 			
     		
     		if( answer.size() > 0 && iter.hasNext() ) {
-    			//System.out.println("Iteramos nueva palabra.");
-    			//System.out.println("answer size: " + answer.size());
     			p1 = answer;
     		}
     		
     		
-    	} while( iter.hasNext() ); // Used do while because the 2 long query wouldnt execute otherwise.
+    	} while( iter.hasNext() );
     	
     	return answer;
     }
@@ -313,8 +278,8 @@ public class Searcher {
 	}
     
     private PostingsList postingsPhrase(ArrayList<PostingsList> postingsLists) {
-    	System.err.println("\n\n");
-    	System.err.println("PostingsPhrase");
+    	//System.err.println("\n\n");
+    	//System.err.println("PostingsPhrase");
     	
     	PostingsList answer;
     	
@@ -383,8 +348,8 @@ public class Searcher {
     				for( int offset1 : postingsEntry1.offsetList ) {
     					for( int offset2 : postingsEntry2.offsetList ) {
     						if(offset1 + current_offset == offset2) {
-								System.err.println(index.docNames.get(postingsEntry1.docID));
-								System.err.println(current_offset);
+								//System.err.println(index.docNames.get(postingsEntry1.docID));
+								//System.err.println(current_offset);
 
     							answer.add(postingsEntry1);
     							finished = true;
@@ -414,16 +379,16 @@ public class Searcher {
     		
     	} while( iter.hasNext() ); // Used do while because the 2 long query wouldnt execute otherwise.
     	
-    	System.err.println("Postings phrase size: " + Integer.toString(answer.size()));
+    	//System.err.println("Postings phrase size: " + Integer.toString(answer.size()));
     	
     	return answer;
     }
 
 	
     
-    public PostingsList postingsUnion(ArrayList<PostingsList> postingsLists) {
+    public PostingsList postingsUnion(ArrayList<PostingsList> postingsLists, QueryType queryType) {
     	
-    	System.err.println("Executing union of size: " + Integer.toString(postingsLists.size()));
+    	//System.err.println("Executing union of size: " + Integer.toString(postingsLists.size()));
     	
     	if ( postingsLists.size() == 1 ) {
     		return postingsLists.get(0);
@@ -434,14 +399,14 @@ public class Searcher {
     	int idx = 1;
     	
     	while(idx < postingsLists.size()) {
-    		answer = mergePostingsLists(answer, postingsLists.get(idx++));
+    		answer = mergePostingsLists(answer, postingsLists.get(idx++), queryType);
     	}
     	
     	return answer;
     	
     }
     
-    public PostingsList mergePostingsLists(PostingsList p1, PostingsList p2) {
+    public PostingsList mergePostingsLists(PostingsList p1, PostingsList p2, QueryType queryType) {
     	
 		
     	PostingsList answer = new PostingsList();
@@ -469,8 +434,13 @@ public class Searcher {
     		
     		if(postingsEntry1.docID == postingsEntry2.docID) {
     			
-    			offsets = mergeOffsets(postingsEntry1.offsetList, postingsEntry2.offsetList);
-    			answer.add(new PostingsEntry(postingsEntry1.docID, offsets));
+				if(queryType==queryType.PHRASE_QUERY){
+					offsets = mergeOffsets(postingsEntry1.offsetList, postingsEntry2.offsetList);
+    				answer.add(new PostingsEntry(postingsEntry1.docID, offsets));
+				} else {
+					answer.add(new PostingsEntry(postingsEntry1.docID));
+				}
+    			
     			
     			p1_idx++;
     			p2_idx++;

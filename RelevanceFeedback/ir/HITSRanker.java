@@ -2,7 +2,9 @@
  *   Computes the Hubs and Authorities for an every document in a query-specific
  *   link graph, induced by the base set of pages.
  *
+ *   @author Damian Valle
  *   @author Dmytro Kalpakchi
+ *   
  */
 
 package ir;
@@ -129,9 +131,6 @@ public class HITSRanker {
             	String[] split = line.split(";");
             	docID = Integer.parseInt(split[0]);
             	
-            	//System.err.println("\n\n");
-            	//System.err.println("docID: " + docID);
-            	
             	if(split.length > 1) {
             		String[] targets = split[1].split(",");
                 	HashSet<Integer> targetsList = new HashSet<Integer>();
@@ -150,10 +149,6 @@ public class HITSRanker {
                 			linkedBySet = new HashSet<Integer>();
                 		}
                 		linkedBySet.add(docID);
-                		
-                		//System.err.println("Target is: " + target);
-                		//System.err.println(linkedBySet);
-                		
                 		linkedBy.put(target, linkedBySet);
             		}
             	}
@@ -163,7 +158,6 @@ public class HITSRanker {
     	}
     	
     	System.err.println("Read " + filesRead + " number of docs");
-    	
     	
     	this.linkedBy = linkedBy;
     	this.linksTo = linksTo;
@@ -184,10 +178,7 @@ public class HITSRanker {
     		try {
     			titleIds[i] = titleToId.get(titles[i]);
     		} catch (Exception e) {
-    			//System.err.println(titles[i]);
     		}
-    		
-    		
     	}
     	
     	iterate(titleIds);
@@ -246,10 +237,7 @@ public class HITSRanker {
 	        this.hubs = tempHubs;
 	        this.authorities = tempAuthorities;
 	        
-	        //System.err.println(hubError);
-	        
 	        if(hubError < EPSILON && authError < EPSILON) {
-	        	//System.err.println("Converged!!!");
 	        	break;
 	        }
     	}

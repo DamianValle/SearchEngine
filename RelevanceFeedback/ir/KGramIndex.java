@@ -3,6 +3,8 @@
  *   Information Retrieval course at KTH.
  *
  *   Dmytro Kalpakchi, 2018
+ * 
+ *   Damian Valle, 2021
  */
 
 package ir;
@@ -176,24 +178,24 @@ public class KGramIndex {
     
     public List<String> getWildcardPostings(String term) {
 
-        System.err.println(term);
-
     	int wcIdx = term.indexOf("*");
 
-        System.err.println("wcIdx: " + Integer.toString(wcIdx));
-    	
     	List<String> kgramsLeft = this.kgrams(term.substring(0, wcIdx));
         List<String> kgramsRight = this.kgrams(term.substring(wcIdx + 1, term.length()));
 
         if (kgramsLeft.size() > 1) kgramsLeft = kgramsLeft.subList(0, kgramsLeft.size()-1);
         if (kgramsRight.size()> 1)kgramsRight = kgramsRight.subList(1, kgramsRight.size());
 
-        kgramsLeft.addAll(kgramsRight);
-        
+        if(kgramsLeft.size() > 0) {
+            kgramsLeft.addAll(kgramsRight);
+        } else {
+            kgramsLeft = kgramsRight;
+        }
+
         List<String> rawPostings = kgramsLeft.stream().map(this::getPostings).reduce(this::intersect).orElse(List.of()).stream()
                 .map(entry -> this.getTermByID(entry.tokenID)).collect(Collectors.toList());
 
-        String testRegex = String.format("^%s.*%s$", term.substring(0, wcIdx),term.substring(wcIdx + 1, term.length()));
+        String testRegex = "^" + term.substring(0, wcIdx) + ".*" + term.substring(wcIdx + 1, term.length());
         List<String> postings = rawPostings.stream().filter(t -> t.matches(testRegex)).collect(Collectors.toList());
         
     	

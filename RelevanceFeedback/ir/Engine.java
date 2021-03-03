@@ -3,6 +3,8 @@
  *   Information Retrieval course at KTH.
  * 
  *   Johan Boye, 2017
+ * 
+ *   Damian Valle, 2021
  */
 
 package ir;
@@ -16,8 +18,8 @@ import java.io.File;
 public class Engine {
 
     /** The inverted index. */
-    //Index index = new HashedIndex();
-    Index index = new PersistentHashedIndex();
+    Index index = new HashedIndex();
+    //Index index = new PersistentHashedIndex();
     //Index index = new ScalablePersistentHashedIndex();
 
     /** The indexer creating the search index. */
@@ -89,13 +91,7 @@ public class Engine {
                 long elapsedTime = System.currentTimeMillis() - startTime;
                 gui.displayInfoText( String.format( "Indexing done in %.1f seconds.", elapsedTime/1000.0 ));
                 
-
-                //kgIndex.printKGrams("ve");
-                //System.err.println("\n\n\n");
-                //kgIndex.printKGrams("th he");
-                
                 indexer.calculateEuclidean();
-                
                 index.cleanup();
             }
         } else {

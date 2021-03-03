@@ -3,6 +3,8 @@
  *   Information Retrieval course at KTH.
  * 
  *   Johan Boye, 2017
+ * 
+ *   Damian Valle, 2021
  */  
 
 package ir;
@@ -30,7 +32,6 @@ public class Query {
             term = t;
             weight = w;
         }
-        
     }
     
 
@@ -143,7 +144,9 @@ public class Query {
     			n_relevant++;
     		}
     	}
-    	if(n_relevant==0) return;
+    	if(n_relevant==0) {
+            return;
+        }
     	
         int relevant_count = 0;
     	for (int i=0; i<docIsRelevant.length; i++) {
@@ -165,6 +168,7 @@ public class Query {
         this.queryterm.stream().forEach(qt -> query_count.merge(qt.term, alpha, Double::sum));
     	
     	this.queryterm.clear();
+        
     	for (Map.Entry<String, Double> entry : query_count.entrySet()) {
     		this.queryterm.add(new QueryTerm(entry.getKey(), entry.getValue()));
     	}
